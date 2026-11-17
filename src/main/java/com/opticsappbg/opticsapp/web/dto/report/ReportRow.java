@@ -27,6 +27,7 @@ public class ReportRow {
     private String supplierName;
     private String username;
     private String reason;
+    private String groupLabel;
 
     private PaymentMethod paymentMethod;
 
