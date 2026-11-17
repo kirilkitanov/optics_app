@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="bg" xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Списък поръчки</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<div class="app-wrapper">
+    <div th:replace="~{header :: header-fragment}"></div>
+    <div class="main-container">
+        <div th:replace="~{sidebar :: sidebar-fragment}"></div>
+
+        <section class="content" >
+           
+            <div class="content-header">
+
+    <div class="orders-title-search">
+        <h1 class="page-title-blue">Всички поръчки</h1>
+
+        <form th:action="@{/orders}" method="get" class="order-search-form">
+            <input type="text"
+                   id="orderSearch"
+                   name="search"
+                   class="order-search-input"
+                   placeholder="клиент, тел., номер, дата"
+                   th:value="${search}"
+                   autocomplete="off">
+
+            <input type="hidden" name="startDate" th:value="${startDate}">
+            <input type="hidden" name="endDate" th:value="${endDate}">
+
+            <button type="submit" class="btn-new-order">Търси</button>
+        </form>
+    </div>
+
+    <form th:action="@{/orders}" method="get" class="date-filter-form">
+        <input type="date" name="startDate"
+               th:value="${startDate}" title="Начална дата">
+
+        <input type="date" name="endDate"
+               th:value="${endDate}" title="Крайна дата">
+
+        <button type="submit" class="btn-new-order">Филтрирай</button>
+    </form>
+
+                <a th:href="@{/orders/export(
+                        startDate=${startDate},
+                        endDate=${endDate},
+                        search=${search})}"
+                   class="btn-new-order">Експорт в Excel
+                </a>
+
+    <a th:href="@{/orders/new}" class="btn-new-order">Нова поръчка</a>
+
+</div>
+
+
+            <div class="table-container orders-table">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Номер</th>
+                        <th>Клиент</th>
+                        <th>Телефон</th>
+                        <th>Сума</th>
+                        <th>Статус</th>
+                        <th>Промяна на статус</th>
+                        <th>Преглед</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <tr class="order-row" th:each="order : ${orders}">
+
+                        <td th:text="${#temporals.format(order.createdOn, 'dd.MM.yyyy')}"></td>
+                        <td th:text="${order.orderNumber}"></td>
+                        <td>
+                            <a th:href="@{/customers/{id}(id=${order.customer.id})}"
+                               th:text="${order.customer.fullName}"
+                               style="color: inherit; text-decoration: none; cursor: pointer;">
+                            </a>
+                        </td>
+                        <td th:text="${order.customer.phone}"></td>
+                        <td th:text="${#numbers.formatDecimal(order.total, 1, 'WHITESPACE', 2, 'POINT') + ' eur'}"></td>
+                        <td>
+                            <span th:text="${order.status.displayName}"
+                                  th:classappend="${order.status.name() == 'CANCELLED'} ? ' status-cancelled' :
+                                                  (${order.status.name() == 'COMPLETED'} ? ' status-completed' :
+                                                  (${order.status.name() == 'READY_FOR_PICKUP'} ? ' status-ready-pickup' :
+                                                  (${order.status.name() == 'WAITING_LENSES'} ? ' status-waiting-lenses' :
+                                                  (${order.status.name() == 'READY_FOR_CRAFT'} ? ' status-ready-for-craft' : ''))))">
+                             </span>
+                        </td>
+
+                        <td>
+                            <form th:if="${order.status != T(com.opticsappbg.opticsapp.order.model.OrderStatus).CANCELLED}"
+                                  th:action="@{/orders/{id}/update-status(id=${order.id})}"
+                                  method="post">
+                                <select name="status"
+                                        class="status-select"
+                                        onchange="this.form.submit()">
+                                    <option th:each="statusOpt : ${T(com.opticsappbg.opticsapp.order.model.OrderStatus).values()}"
+                                            th:value="${statusOpt}"
+                                            th:text="${statusOpt.displayName}"
+                                            th:selected="${statusOpt == order.status}">
+                                    </option>
+                                </select>
+                            </form>
+                        </td>
+
+                        <td>
+                            <a th:href="@{/orders/{id}/edit(id=${order.id})}"
+                               class="btn-table-action"> Отвори </a>
+                        </td>
+                    </tr>
+
+                    <tr id="noSearchResults" style="display: none;">
+                        <td colspan="8" class="empty-table-message">
+                            Няма поръчки, отговарящи на търсенето.
+                        </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(orders)}">
+                        <td colspan="8" class="empty-table-message">
+                            Няма намерени поръчки.
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </div>
+            <!-- Пагинация -->
+            <div class="pagination-container" th:if="${totalPages > 1}">
+
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/orders(page=${currentPage - 1}, startDate=${startDate}, endDate=${endDate}, search=${search})}"
+                   class="btn-new-order">
+                    ← Предишна
+                </a>
+
+                <span class="pagination-info">
+        Страница <span th:text="${currentPage + 1}"></span>
+        от <span th:text="${totalPages}"></span>
+    </span>
+
+                <a th:if="${currentPage < totalPages - 1}"
+                   th:href="@{/orders(page=${currentPage + 1}, startDate=${startDate}, endDate=${endDate}, search=${search})}"
+                   class="btn-new-order">
+                    Следваща →
+                </a>
+            </div>
+
+        </section>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('orderSearch');
+        const orderRows = Array.from(document.querySelectorAll('.order-row'));
+
+        let selectedIndex = -1;
+
+        orderRows.forEach(function (row) {
+            row.addEventListener('click', function (event) {
+
+                if (event.target.closest('a, select, button, input')) {
+                    return;
+                }
+
+                selectRow(row);
+            });
+        });
+
+        function getVisibleRows() {
+            return orderRows.filter(function (row) {
+                return row.style.display !== 'none';
+            });
+        }
+
+        function selectRow(row) {
+            const visibleRows = getVisibleRows();
+
+            orderRows.forEach(function (item) {
+                item.classList.remove('order-row-selected');
+            });
+
+            selectedIndex = visibleRows.indexOf(row);
+
+            if (selectedIndex >= 0) {
+                row.classList.add('order-row-selected');
+                row.scrollIntoView({block: 'nearest'});
+            }
+        }
+
+        document.addEventListener('keydown', function (event) {
+            const target = event.target;
+
+            if (
+                target.matches('input, textarea, select') ||
+                target.isContentEditable
+            ) {
+                return;
+            }
+
+            const visibleRows = getVisibleRows();
+
+            if (visibleRows.length === 0) {
+                return;
+            }
+
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+
+                if (event.key === 'ArrowDown') {
+                    selectedIndex = selectedIndex < 0
+                        ? 0
+                        : Math.min(selectedIndex + 1, visibleRows.length - 1);
+                } else {
+                    selectedIndex = selectedIndex < 0
+                        ? visibleRows.length - 1
+                        : Math.max(selectedIndex - 1, 0);
+                }
+
+                selectRow(visibleRows[selectedIndex]);
+            }
+
+            if (event.key === 'Enter' && selectedIndex >= 0) {
+                const selectedRow = visibleRows[selectedIndex];
+                const actionLink = selectedRow.querySelector('.btn-table-action');
+
+                if (actionLink) {
+                    event.preventDefault();
+                    window.location.href = actionLink.href;
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>
