@@ -28,9 +28,11 @@ public class SalesReportService {
     private static final int SCALE = 2;
 
     private final OrderRepository orderRepository;
+    private final ReportGroupingService groupingService;
 
-    public SalesReportService(OrderRepository orderRepository) {
+    public SalesReportService(OrderRepository orderRepository, ReportGroupingService groupingService) {
         this.orderRepository = orderRepository;
+        this.groupingService = groupingService;
     }
 
     public ReportSection generate(
@@ -77,7 +79,13 @@ public class SalesReportService {
             }
         }
 
-        section.setRows(rows);
+        List<ReportRow> groupedRows = groupingService.group(
+                rows,
+                filter.getPrimaryGrouping(),
+                filter.getSecondaryGrouping()
+        );
+
+        section.setRows(groupedRows);
         section.setTotals(totals);
 
         return section;
