@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="bg" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Преглед на импорт</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<div class="app-wrapper">
+
+    <div th:replace="~{header :: header-fragment}"></div>
+
+    <div class="main-container">
+
+        <div th:replace="~{sidebar :: sidebar-fragment}"></div>
+
+        <section class="content">
+
+            <div class="content-header">
+                <div class="orders-title-search">
+                    <h1 class="page-title-blue">
+                        Преглед на импорт – ревизия №<span th:text="${stocktake.id}"></span>
+                    </h1>
+                </div>
+
+                <a th:href="@{/stocktakes/{id}(id=${stocktake.id})}"
+                   class="btn-new-order">
+                    Назад към ревизията
+                </a>
+            </div>
+
+            <div style="display: flex; gap: 25px; margin-bottom: 20px; flex-wrap: wrap;">
+
+                <p>
+                    <strong>Валидни редове:</strong>
+                    <span th:text="${preview.validRows}"></span>
+                </p>
+
+                <p>
+                    <strong>Редове с грешки:</strong>
+                    <span th:text="${preview.errorRows}"></span>
+                </p>
+
+                <p>
+                    <strong>Игнорирани редове:</strong>
+                    <span th:text="${preview.ignoredRows}"></span>
+                </p>
+
+            </div>
+
+            <div th:if="${preview.hasErrors()}"
+                 style="margin-bottom: 20px; color: #b00020;">
+                <strong>
+                    Импортът съдържа грешки. Не може да бъде потвърден.
+                </strong>
+            </div>
+
+            <div class="table-container orders-table">
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Excel ред</th>
+                        <th>ID</th>
+                        <th>Продукт</th>
+                        <th>Начална наличност</th>
+                        <th>Въведено количество</th>
+                        <th>Разлика</th>
+                        <th>Резултат</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <tr th:each="row : ${preview.rows}">
+
+                        <td th:text="${row.rowNumber}"></td>
+
+                        <td th:text="${row.productId != null
+                            ? row.productId
+                            : '—'}"></td>
+
+                        <td th:text="${row.productName != null
+                            ? row.productName
+                            : '—'}"></td>
+
+                        <td th:text="${row.initialQuantity != null
+                            ? row.initialQuantity
+                            : '—'}"></td>
+
+                        <td th:text="${row.importedQuantity != null
+                            and !row.importedQuantity.isBlank()
+                            ? row.importedQuantity
+                            : '—'}"></td>
+
+                        <td th:text="${row.difference != null
+                            ? row.difference
+                            : '—'}"></td>
+
+                        <td>
+                            <span th:if="${row.error != null}"
+                                  th:text="${row.error}"
+                                  style="color: #b00020;"></span>
+
+                            <span th:if="${row.error == null
+                                and row.countedQuantity != null}"
+                                  style="color: #218838;">
+                                Валиден
+                            </span>
+
+                            <span th:if="${row.error == null
+                                and row.countedQuantity == null}">
+                                Игнориран
+                            </span>
+                        </td>
+
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(preview.rows)}">
+                        <td colspan="7" class="empty-table-message">
+                            Excel файлът не съдържа редове за импорт.
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+
+                <form th:action="@{/stocktakes/{id}/import/confirm(id=${stocktake.id})}"
+                      method="post">
+
+                    <button type="submit"
+                            class="btn-new-order"
+                            th:disabled="${preview.hasErrors() or preview.validRows == 0}"
+                            th:style="${preview.hasErrors() or preview.validRows == 0}
+                    ? 'opacity: 0.6; cursor: not-allowed;'
+                    : ''">
+                        Потвърди импорта
+                    </button>
+
+                </form>
+
+                <a th:href="@{/stocktakes/{id}(id=${stocktake.id})}"
+                   class="btn-new-order">
+                    Отказ
+                </a>
+
+            </div>
+
+        </section>
+
+    </div>
+</div>
+
+</body>
+</html>

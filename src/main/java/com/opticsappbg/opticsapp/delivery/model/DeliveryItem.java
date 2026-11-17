@@ -1,0 +1,45 @@
+package com.opticsappbg.opticsapp.delivery.model;
+
+import com.opticsappbg.opticsapp.product.model.Product;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Data
+@Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "delivery_items")
+public class DeliveryItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_id", nullable = false)
+    private Delivery delivery;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @Column(name = "purchase_price_at_delivery", nullable = false, precision = 12, scale = 2)
+    private BigDecimal purchasePriceAtDelivery;
+
+    @Column(name = "original_purchase_price_at_delivery", nullable = false, precision = 12, scale = 2)
+    private BigDecimal originalPurchasePriceAtDelivery;
+
+    @Column(nullable = false)
+    private LocalDateTime createdOn;
+
+    @Column
+    private LocalDateTime updatedOn;
+}
+

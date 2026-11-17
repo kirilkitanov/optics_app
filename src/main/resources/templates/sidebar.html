@@ -1,0 +1,60 @@
+<div class="sidebar" th:fragment="sidebar-fragment" xmlns:th="http://www.thymeleaf.org">
+
+
+    <div class="logo" id="sidebarLogoContainer">
+        <img th:src="@{/images/logo.png}" alt="Лого" class="sidebar-logo-img" id="sidebarLogoImg">
+    </div>
+
+    <nav>
+        <a th:href="@{/home}"
+           th:classappend="${activeSection == 'home'} ? ' active' : ''">
+            Начало
+        </a>
+
+        <a th:href="@{/products}"
+           th:classappend="${activeSection == 'products'} ? ' active' : ''">
+            Продукти
+        </a>
+
+        <a th:href="@{/customers}"
+           th:classappend="${activeSection == 'customers'} ? ' active' : ''">
+            Клиенти
+        </a>
+
+        <a th:href="@{/orders}"
+           th:classappend="${activeSection == 'orders'} ? ' active' : ''">
+            Поръчки
+        </a>
+
+        <a th:href="@{/deliveries}"
+            th:if="${currentUser != null and (currentUser.role.name() == 'ADMIN' or currentUser.role.name() == 'OWNER')}"
+            th:classappend="${activeSection == 'deliveries'} ? ' active' : ''">
+             Доставки
+        </a>
+
+        <a th:href="@{/reports}"
+           th:classappend="${activeSection == 'reports'} ? ' active' : ''">
+            Справки
+        </a>
+
+        <a th:href="@{/stocktakes}"
+           th:classappend="${activeSection == 'stocktakes'} ? ' active' : ''">
+            Ревизии
+        </a>
+
+        <a th:href="@{/system}"
+           th:classappend="${activeSection == 'system'} ? ' active' : ''">
+            Система
+        </a>
+    </nav>
+
+
+    <script>
+        document.getElementById('sidebarLogoImg').addEventListener('error', function() {
+            var container = document.getElementById('sidebarLogoContainer');
+            if (container) {
+                container.style.display = 'none';
+            }
+        });
+    </script>
+</div>
