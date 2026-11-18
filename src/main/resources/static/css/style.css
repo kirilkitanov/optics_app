@@ -1668,7 +1668,6 @@ body:has(.customer-row) .content-header .order-search-form {
 
 
 /* Reports */
-
 .report-page {
     overflow-y: auto;
     min-height: 0;
@@ -1686,7 +1685,7 @@ body:has(.customer-row) .content-header .order-search-form {
 }
 
 .report-filter-section {
-    padding: 4px 0 14px;
+    padding: 4px 0 13px;
     border-bottom: 1px solid #e8edf1;
     margin-bottom: 12px;
 }
@@ -1696,19 +1695,30 @@ body:has(.customer-row) .content-header .order-search-form {
     color: #1f4e79;
     font-size: 14px;
     font-weight: 700;
-    margin: 0 0 12px;
+    margin: 0 0 10px;
+}
+
+.report-source-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px 22px;
 }
 
 .report-checkbox-grid {
     display: flex;
+    flex: 1 1 auto;
     flex-wrap: wrap;
-    gap: 8px 20px;
+    align-items: center;
+    gap: 8px 17px;
+    min-width: 0;
 }
 
 .report-checkbox {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
     font-size: 13px;
     cursor: pointer;
 }
@@ -1717,36 +1727,64 @@ body:has(.customer-row) .content-header .order-search-form {
     accent-color: #1f4e79;
 }
 
-.report-filter-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(150px, 1fr));
-    gap: 12px 14px;
-    align-items: end;
+.report-date-fields {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: flex-end;
+    gap: 10px;
 }
 
-.report-date-grid {
-    grid-template-columns: minmax(150px, 190px) minmax(150px, 190px) minmax(190px, 1fr);
-    max-width: 760px;
-    margin-bottom: 14px;
-}
-
-.report-filter-grid label,
-.report-product-filters label {
+.report-date-field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
+    width: 150px;
+    font-size: 12px;
+    color: #394653;
+    font-weight: 600;
+}
+
+.report-date-field input {
+    width: 100%;
+    height: 36px;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border: 1px solid #cfd7df;
+    border-radius: 5px;
+    background: #fff;
+    color: #293744;
+    font-size: 12px;
+}
+
+.report-product-filters {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.85fr) minmax(175px, 1fr) minmax(210px, 1.15fr) minmax(300px, 2fr);
+    gap: 12px;
+    align-items: end;
+    padding: 12px;
+    background: #f7f9fb;
+    border: 1px solid #e6ebef;
+    border-radius: 6px;
+}
+
+.report-product-filters label,
+.report-filter-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
     min-width: 0;
     font-size: 12px;
     color: #394653;
     font-weight: 600;
 }
 
+.report-product-filters select,
 .report-filter-grid input,
-.report-filter-grid select,
-.report-product-filters select {
+.report-filter-grid select {
     width: 100%;
     min-width: 0;
     height: 36px;
+    box-sizing: border-box;
     padding: 6px 9px;
     border: 1px solid #cfd7df;
     border-radius: 5px;
@@ -1754,6 +1792,17 @@ body:has(.customer-row) .content-header .order-search-form {
     color: #293744;
     font-size: 13px;
     font-weight: 400;
+}
+
+.report-category-field {
+    min-width: 0;
+}
+
+.report-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    gap: 12px 14px;
+    align-items: end;
 }
 
 .report-filter-grid select[multiple] {
@@ -1764,29 +1813,11 @@ body:has(.customer-row) .content-header .order-search-form {
 .report-filter-grid input:focus,
 .report-filter-grid select:focus,
 .report-product-filters select:focus,
-.report-product-search:focus {
+.report-product-search:focus,
+.report-date-field input:focus {
     outline: none;
     border-color: #1f4e79;
     box-shadow: 0 0 0 3px rgba(31, 78, 121, 0.09);
-}
-
-.report-category-field {
-    max-width: 280px;
-}
-
-.report-product-filters {
-    display: grid;
-    grid-template-columns: minmax(180px, 0.8fr) minmax(180px, 0.8fr) minmax(320px, 1.8fr);
-    gap: 14px;
-    align-items: start;
-    padding: 14px;
-    background: #f7f9fb;
-    border: 1px solid #e6ebef;
-    border-radius: 6px;
-}
-
-.report-product-field {
-    grid-column: auto;
 }
 
 .report-product-picker {
@@ -1798,6 +1829,7 @@ body:has(.customer-row) .content-header .order-search-form {
     display: block;
     width: 100%;
     height: 36px;
+    box-sizing: border-box;
     padding: 7px 10px;
     border: 1px solid #cfd7df;
     border-radius: 5px;
@@ -1912,45 +1944,57 @@ body:has(.customer-row) .content-header .order-search-form {
     margin-bottom: 14px;
 }
 
-@media (max-width: 1100px) {
-    .report-filter-grid {
-        grid-template-columns: repeat(2, minmax(150px, 1fr));
-    }
-
-    .report-product-filters {
-        grid-template-columns: repeat(2, minmax(180px, 1fr));
-    }
-
-    .report-product-field {
-        grid-column: 1 / -1;
-    }
-}
-
-@media (max-width: 650px) {
-    .report-filters,
-    .report-results {
-        padding: 11px;
-    }
-
-    .report-date-grid,
-    .report-filter-grid,
-    .report-product-filters {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .report-category-field {
-        max-width: none;
-    }
-
-    .report-product-field {
-        grid-column: auto;
-    }
-}
-
 .report-document-type {
     display: block;
     margin-top: 3px;
     color: #667584;
     font-size: 11px;
     font-weight: 400;
+}
+
+@media (max-width: 1150px) {
+    .report-source-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .report-product-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .report-product-field {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 760px) {
+    .report-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .report-date-fields {
+        width: 100%;
+    }
+
+    .report-date-field {
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 520px) {
+    .report-filters,
+    .report-results {
+        padding: 11px;
+    }
+
+    .report-product-filters,
+    .report-filter-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .report-product-field {
+        grid-column: auto;
+    }
 }
