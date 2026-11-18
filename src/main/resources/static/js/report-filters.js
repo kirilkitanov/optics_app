@@ -35,8 +35,8 @@ document.addEventListener('DOMContentLoaded', function () {
     productSelect.removeAttribute('name');
 
     const selected = new Map(products.filter(p => p.selected).map(p => [p.id, p]));
-    const originalBrand = brandSelect.value;
-    const originalModel = modelSelect.value;
+    const originalBrand = brandSelect.dataset.selectedBrand || brandSelect.value;
+    const originalModel = modelSelect.dataset.selectedModel || modelSelect.value;
 
     function normalize(value) {
         return String(value || '')
