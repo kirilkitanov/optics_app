@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return String(value || '')
             .toLocaleLowerCase('bg-BG')
             .replace(/,/g, '.')
-            .replace(/\\s+/g, ' ')
+            .replace(/\s+/g, ' ')
             .trim();
     }
 
