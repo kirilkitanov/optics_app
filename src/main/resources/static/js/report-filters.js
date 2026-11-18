@@ -225,13 +225,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 suggestions.hidden = false;
             }
         } finally {
-            if (sequence === requestSequence) loadingMoreMatches = false;
+            if (sequence === requestSequence) {
+                loadingMoreMatches = false;
+
+                // If the first batch does not fill the visible list, load the next batch automatically.
+                if (hasMoreMatches && !suggestions.hidden
+                        && suggestions.scrollHeight <= suggestions.clientHeight + 2) {
+                    fetchProductMatches(false);
+                }
+            }
         }
     }
 
     function renderSuggestions() {
         clearTimeout(searchTimer);
         requestSequence++;
+        loadingMoreMatches = false;
         searchTimer = setTimeout(() => fetchProductMatches(true), 250);
     }
 
