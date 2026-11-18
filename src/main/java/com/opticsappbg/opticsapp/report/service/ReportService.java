@@ -8,6 +8,15 @@ import com.opticsappbg.opticsapp.supplier.repository.SupplierRepository;
 import com.opticsappbg.opticsapp.user.repository.UserRepository;
 import com.opticsappbg.opticsapp.web.dto.report.ReportFilter;
 import com.opticsappbg.opticsapp.web.dto.report.ReportResult;
+import com.opticsappbg.opticsapp.web.dto.report.ReportProductFilterOption;
+import com.opticsappbg.opticsapp.web.dto.report.ReportProductOption;
+import com.opticsappbg.opticsapp.product.model.Product;
+import com.opticsappbg.opticsapp.product.model.ProductCategory;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,22 +71,40 @@ public class ReportService {
                 "suppliers",
                 supplierRepository.findAllByOrderByCompanyNameAsc(),
 
-                "products",
-                productRepository.findAll().stream()
-                        .sorted(Comparator
-                                .comparing(
-                                        (com.opticsappbg.opticsapp.product.model.Product p)
-                                                -> p.getBrand(),
-                                        String.CASE_INSENSITIVE_ORDER
-                                )
-                                .thenComparing(
-                                        p -> p.getModel(),
-                                        String.CASE_INSENSITIVE_ORDER
-                                ))
-                        .toList(),
-
                 "users",
                 userRepository.findAllByOrderByCreatedOnDesc()
         );
     }
+    public List<ReportProductFilterOption> getReportProductFilters() {
+        return productRepository.findDistinctReportProductFilters().stream()
+                .map(row -> new ReportProductFilterOption((ProductCategory) row[0], (String) row[1], (String) row[2]))
+                .toList();
+    }
+
+    public List<ReportProductOption> searchReportProducts(String query, Set<ProductCategory> categories, String brand, String model) {
+        if (query == null || query.isBlank()) return List.of();
+        String normalized = query.trim().toLowerCase(Locale.ROOT).replace(',', '.').replaceAll("\\s+", " ");
+        String categoryCsv = categories == null || categories.isEmpty() ? "" :
+                categories.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(","));
+        DecimalFormat format = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US));
+
+        return productRepository.searchReportProducts(normalized, categoryCsv,
+                        brand == null ? "" : brand, model == null ? "" : model)
+                .stream()
+                .map(p -> new ReportProductOption(p.getId(),
+                        p.getBrand() + " " + p.getModel()
+                                + " | S" + format.format(p.getSph())
+                                + " C" + format.format(p.getCyl())
+                                + " A" + format.format(p.getAddPower())
+                                + " P" + format.format(p.getPrism())
+                                + (p.getSizeOrDiameter() != null ? " | " + p.getSizeOrDiameter() : "")
+                                + (p.getBarcode() != null ? " | " + p.getBarcode() : ""),
+                        p.getCategory().name(), p.getBrand(), p.getModel()))
+                .toList();
+    }
+
+    public List<Product> getProductsByIds(Set<Long> ids) {
+        return ids == null || ids.isEmpty() ? List.of() : productRepository.findAllById(ids);
+    }
 }
+
