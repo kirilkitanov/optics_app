@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.querySelector('.report-filters');
-    const categorySelect = form?.querySelector('[name="categories"]');
+    const categorySelect = document.getElementById('reportCategorySelect');
+    const categoryPicker = document.getElementById('reportCategoryPicker');
+    const categoryTrigger = document.getElementById('reportCategoryTrigger');
+    const categoryOptions = document.getElementById('reportCategoryOptions');
     const brandSelect = document.getElementById('reportBrandSelect');
     const modelSelect = document.getElementById('reportModelSelect');
     const productSelect = document.getElementById('reportProductSelect');
@@ -34,6 +37,35 @@ document.addEventListener('DOMContentLoaded', function () {
             .replace(/\s+/g, ' ')
             .trim();
     }
+
+    function updateCategoryPicker() {
+        if (!categorySelect || !categoryOptions || !categoryTrigger) return;
+        const selectedValues = new Set(Array.from(categorySelect.selectedOptions).map(option => option.value));
+        categoryOptions.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = selectedValues.has(checkbox.value);
+        });
+        const labels = Array.from(categorySelect.selectedOptions).map(option => option.textContent);
+        categoryTrigger.textContent = labels.length ? labels.join(', ') : 'Всички категории';
+    }
+
+    categoryTrigger?.addEventListener('click', () => {
+        categoryOptions.hidden = !categoryOptions.hidden;
+    });
+
+    categoryOptions?.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const option = Array.from(categorySelect.options).find(item => item.value === checkbox.value);
+            if (option) option.selected = checkbox.checked;
+            categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+            updateCategoryPicker();
+        });
+    });
+
+    document.addEventListener('click', event => {
+        if (!event.target.closest('#reportCategoryPicker') && categoryOptions) {
+            categoryOptions.hidden = true;
+        }
+    });
 
     function getCategories() {
         return categorySelect
@@ -179,6 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!event.target.closest('#reportProductPicker')) suggestions.hidden = true;
     });
 
+    updateCategoryPicker();
     refreshBrands(originalBrand);
     refreshModels(originalModel);
     renderSelected();
