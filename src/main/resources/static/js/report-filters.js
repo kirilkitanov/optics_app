@@ -20,14 +20,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!form || !productSelect || !brandSelect || !modelSelect || !search) return;
 
-    const products = Array.from(productSelect.options).map(option => ({
-        id: option.value,
-        label: option.textContent.trim(),
-        category: option.dataset.category || '',
-        brand: option.dataset.brand || '',
-        model: option.dataset.model || '',
-        selected: option.selected
+    let products = Array.from(productSelect.options).map(option => ({
+        id: option.value, label: option.textContent.trim(),
+        category: option.dataset.category || '', brand: option.dataset.brand || '',
+        model: option.dataset.model || '', selected: option.selected
     })).filter(product => product.id);
+    const searchUrl = search.dataset.searchUrl;
+    const filterUrl = search.dataset.filterUrl;
+    let filterOptions = [];
+    let searchTimer;
+    let requestSequence = 0;
 
     // Изборът се изпраща чрез hidden inputs, за да няма дублиране от скрития select.
     productSelect.removeAttribute('name');
@@ -130,123 +132,110 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function refreshBrands(preferredBrand = brandSelect.value) {
-        const available = products.filter(categoryMatches);
-        const brands = [...new Set(available.map(p => p.brand).filter(Boolean))]
-            .sort((a, b) => a.localeCompare(b, 'bg'));
+        const categories = getCategories();
+        const available = filterOptions.filter(item => !categories.length || categories.includes(item.category));
+        const brands = [...new Set(available.map(item => item.brand).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'bg'));
         fillSelect(brandSelect, brands, 'Всички брандове', preferredBrand);
-
         if (!brands.includes(brandSelect.value)) brandSelect.value = '';
         refreshModels(modelSelect.value);
     }
 
     function refreshModels(preferredModel = modelSelect.value) {
-        const brand = brandSelect.value;
-        const available = products.filter(p => categoryMatches(p) && (!brand || p.brand === brand));
-        const models = [...new Set(available.map(p => p.model).filter(Boolean))]
-            .sort((a, b) => a.localeCompare(b, 'bg'));
-
+        const categories = getCategories();
+        const available = filterOptions.filter(item =>
+            (!categories.length || categories.includes(item.category)) &&
+            (!brandSelect.value || item.brand === brandSelect.value));
+        const models = [...new Set(available.map(item=>item.model).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'bg'));
         fillSelect(modelSelect, models, 'Всички модели', preferredModel);
         modelSelect.disabled = models.length === 0;
     }
 
-    function renderSelected() {
-        selectedList.replaceChildren();
-        hiddenInputs.replaceChildren();
-
-        selected.forEach(product => {
-            const chip = document.createElement('div');
-            chip.className = 'report-selected-product';
-
-            const label = document.createElement('span');
-            label.textContent = product.label;
-
-            const remove = document.createElement('button');
-            remove.type = 'button';
-            remove.textContent = '×';
-            remove.setAttribute('aria-label', 'Премахни продукт');
-            remove.addEventListener('click', () => {
-                selected.delete(product.id);
-                renderSelected();
-            });
-
-            chip.append(label, remove);
-            selectedList.appendChild(chip);
-
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'productIds';
-            hidden.value = product.id;
-            hiddenInputs.appendChild(hidden);
-        });
+    async function loadFilterOptions() {
+        const response = await fetch(filterUrl);
+        if (!response.ok) throw new Error('Неуспешно зареждане на продуктовите филтри.');
+        filterOptions = await response.json();
+        refreshBrands(originalBrand);
+        refreshModels(originalModel);
     }
 
-    function renderSuggestions() {
-        suggestions.replaceChildren();
-        activeSuggestionIndex = -1;
+    async function fetchProductMatches() {
         const query = normalize(search.value);
-
         if (!query) {
             currentMatches = [];
+            suggestions.replaceChildren();
             suggestions.hidden = true;
             return;
         }
+        const sequence = ++requestSequence;
+        const params = new URLSearchParams({query});
+        getCategories().forEach(category => params.append('categories', category));
+        if (brandSelect.value) params.set('brand', brandSelect.value);
+        if (modelSelect.value) params.set('model', modelSelect.value);
+        try {
+            const response = await fetch(searchUrl + '?' + params.toString());
+            if (!response.ok) throw new Error('Search failed');
+            const matches = await response.json();
+            if (sequence !== requestSequence) return;
+            currentMatches = matches;
+            renderSuggestionsFromMatches();
+        } catch (error) {
+            suggestions.replaceChildren();
+            const message = document.createElement('div');
+            message.className = 'report-product-no-results';
+            message.textContent = 'Търсенето временно не е достъпно.';
+            suggestions.appendChild(message);
+            suggestions.hidden = false;
+        }
+    }
 
-        currentMatches = products.filter(product => {
-            if (!categoryMatches(product)) return false;
-            if (brandSelect.value && product.brand !== brandSelect.value) return false;
-            if (modelSelect.value && product.model !== modelSelect.value) return false;
-            return normalize(product.label).includes(query);
-        }).slice(0, 40);
-
-        if (currentMatches.length === 0) {
+    function renderSuggestionsFromMatches() {
+        suggestions.replaceChildren();
+        activeSuggestionIndex = -1;
+        if (!currentMatches.length) {
             const empty = document.createElement('div');
             empty.className = 'report-product-no-results';
             empty.textContent = 'Няма намерени продукти с тази стойност.';
             suggestions.appendChild(empty);
         } else {
-            currentMatches.forEach((product, index) => {
+            currentMatches.forEach((item,index) => {
+                const product = {id:String(item.id), label:item.label, category:item.category, brand:item.brand, model:item.model};
+                products = products.filter(existing => existing.id !== product.id);
+                products.push(product);
                 const button = document.createElement('button');
                 button.type = 'button';
-                button.className = 'report-product-suggestion';
+                button.className = 'report-product-suggestion' + (selected.has(product.id) ? ' is-selected' : '');
                 button.textContent = product.label;
-                button.setAttribute('aria-pressed', String(selected.has(product.id)));
-
-                if (selected.has(product.id)) {
-                    button.classList.add('is-selected');
-                }
-
-                // Keep the search input focused so the results remain open while selecting.
                 button.addEventListener('mousedown', event => event.preventDefault());
                 button.addEventListener('mouseenter', () => setActiveSuggestion(index));
                 button.addEventListener('click', event => {
                     if (event.shiftKey && lastClickedSuggestionIndex >= 0) {
-                        const start = Math.min(lastClickedSuggestionIndex, index);
-                        const end = Math.max(lastClickedSuggestionIndex, index);
-
-                        for (let i = start; i <= end; i++) {
-                            selected.set(currentMatches[i].id, currentMatches[i]);
-                        }
-                    } else if (event.ctrlKey || event.metaKey) {
-                        if (selected.has(product.id)) {
-                            selected.delete(product.id);
-                        } else {
-                            selected.set(product.id, product);
-                        }
-                        lastClickedSuggestionIndex = index;
-                    } else {
-                        selected.set(product.id, product);
-                        lastClickedSuggestionIndex = index;
-                    }
-
+                        const from=Math.min(lastClickedSuggestionIndex,index), to=Math.max(lastClickedSuggestionIndex,index);
+                        for(let i=from;i<=to;i++){const match=currentMatches[i];const p={id:String(match.id),label:match.label,category:match.category,brand:match.brand,model:match.model};selected.set(p.id,p);}
+                    } else if(event.ctrlKey || event.metaKey) {
+                        if(selected.has(product.id)) selected.delete(product.id); else selected.set(product.id,product);
+                    } else selected.set(product.id,product);
+                    lastClickedSuggestionIndex=index;
                     renderSelected();
-                    renderSuggestions();
+                    renderSuggestionsFromMatches();
                     search.focus();
                 });
                 suggestions.appendChild(button);
             });
         }
-
         suggestions.hidden = false;
+    }
+
+    function setActiveSuggestion(index) {
+        const items = Array.from(suggestions.querySelectorAll('.report-product-suggestion'));
+        if (!items.length) return;
+        activeSuggestionIndex = Math.max(0,Math.min(index,items.length-1));
+        items.forEach((item,i)=>item.classList.toggle('is-active',i===activeSuggestionIndex));
+        items[activeSuggestionIndex].scrollIntoView({block:'nearest'});
+    }
+
+    function chooseActiveSuggestion() {
+        const item=suggestions.querySelectorAll('.report-product-suggestion')[activeSuggestionIndex];
+        if(item) item.click();
     }
 
     categorySelect?.addEventListener('change', () => {
@@ -295,7 +284,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     updateCategoryPicker();
-    refreshBrands(originalBrand);
-    refreshModels(originalModel);
+    loadFilterOptions().catch(error => console.error(error));
     renderSelected();
 });
