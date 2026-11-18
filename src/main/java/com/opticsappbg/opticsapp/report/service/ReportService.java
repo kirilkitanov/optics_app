@@ -81,7 +81,7 @@ public class ReportService {
                 .toList();
     }
 
-    public List<ReportProductOption> searchReportProducts(String query, Set<ProductCategory> categories, String brand, String model) {
+    public List<ReportProductOption> searchReportProducts(String query, Set<ProductCategory> categories, String brand, String model, int offset) {
         if (query == null || query.isBlank()) return List.of();
         String normalized = query.trim().toLowerCase(Locale.ROOT).replace(',', '.').replaceAll("\\s+", " ");
         String categoryCsv = categories == null || categories.isEmpty() ? "" :
@@ -89,7 +89,7 @@ public class ReportService {
         DecimalFormat format = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US));
 
         return productRepository.searchReportProducts(normalized, categoryCsv,
-                        brand == null ? "" : brand, model == null ? "" : model)
+                        brand == null ? "" : brand, model == null ? "" : model, Math.max(0, offset))
                 .stream()
                 .map(p -> new ReportProductOption(p.getId(),
                         p.getBrand() + " " + p.getModel()
