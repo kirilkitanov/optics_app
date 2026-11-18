@@ -70,9 +70,10 @@ public class ReportController {
             @RequestParam String query,
             @RequestParam(required = false) Set<ProductCategory> categories,
             @RequestParam(required = false) String brand,
-            @RequestParam(required = false) String model
+            @RequestParam(required = false) String model,
+            @RequestParam(defaultValue = "0") int offset
     ) {
-        return reportService.searchReportProducts(query, categories, brand, model);
+        return reportService.searchReportProducts(query, categories, brand, model, offset);
     }
 
     private void addCommonAttributes(
