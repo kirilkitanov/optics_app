@@ -31,7 +31,7 @@ public class ReportController {
         model.addAttribute("filter", new ReportFilter());
         model.addAttribute("result", null);
 
-        return "reports/index";
+        return "reports/reports";
     }
 
     @PostMapping
@@ -46,7 +46,7 @@ public class ReportController {
                 reportService.generate(filter, canViewPurchaseValues(user))
         );
 
-        return "reports/index";
+        return "reports/reports";
     }
 
     private void addCommonAttributes(
