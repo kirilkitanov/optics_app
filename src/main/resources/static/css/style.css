@@ -2061,3 +2061,89 @@ body:has(.customer-row) .content-header .order-search-form {
         grid-column: auto;
     }
 }
+
+/* Report filter layout and multi-select controls */
+.report-secondary-filters {
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    margin-bottom: 0;
+}
+
+.report-payment-field {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.report-payment-picker {
+    position: relative;
+}
+
+.report-payment-trigger {
+    width: 100%;
+    height: 36px;
+    box-sizing: border-box;
+    padding: 6px 28px 6px 9px;
+    overflow: hidden;
+    border: 1px solid #cfd7df;
+    border-radius: 5px;
+    background: #fff;
+    color: #293744;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.report-payment-options {
+    position: absolute;
+    top: calc(100% + 3px);
+    left: 0;
+    right: 0;
+    z-index: 36;
+    padding: 7px 9px;
+    background: #fff;
+    border: 1px solid #cbd3dc;
+    border-radius: 5px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+}
+
+.report-payment-options[hidden] {
+    display: none;
+}
+
+.report-payment-options label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 1px;
+    color: #344452;
+    font-size: 12px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.report-payment-options input {
+    accent-color: #1f4e79;
+}
+
+.report-product-suggestion.is-active {
+    background: #e2edf7;
+    outline: 1px solid #9bb8d2;
+    outline-offset: -1px;
+}
+
+@media (max-width: 760px) {
+    .report-secondary-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .report-secondary-filters {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
