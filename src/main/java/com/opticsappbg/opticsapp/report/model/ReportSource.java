@@ -12,8 +12,7 @@ public enum ReportSource {
     CUSTOMER_PAYMENTS("Клиентски плащания"),
     SUPPLIER_PAYMENTS("Плащания към доставчици"),
     STOCKTAKES("Ревизии"),
-    STOCK_ADJUSTMENTS("Складови корекции"),
-    STOCK_MOVEMENTS("Складови движения");
+    STOCK_ADJUSTMENTS("Складови корекции");
 
     private final String displayName;
 }
