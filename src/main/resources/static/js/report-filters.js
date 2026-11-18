@@ -20,7 +20,10 @@ document.addEventListener('DOMContentLoaded', function () {
         selected: option.selected
     })).filter(product => product.id);
 
-    // Изборът се изпраща чрез hidden inputs, за да няма дублиране от скрития select.\n    productSelect.removeAttribute('name');\n\n    const selected = new Map(products.filter(p => p.selected).map(p => [p.id, p]));
+    // Изборът се изпраща чрез hidden inputs, за да няма дублиране от скрития select.
+    productSelect.removeAttribute('name');
+
+    const selected = new Map(products.filter(p => p.selected).map(p => [p.id, p]));
     const originalBrand = brandSelect.value;
     const originalModel = modelSelect.value;
 
@@ -153,7 +156,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     categorySelect?.addEventListener('change', () => {
+        selected.forEach((product, id) => {
+            if (!categoryMatches(product)) selected.delete(id);
+        });
         refreshBrands('');
+        renderSelected();
         renderSuggestions();
     });
 
