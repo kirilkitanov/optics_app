@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Справки</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/report-page.css}">
 </head>
 <body>
 
@@ -114,6 +115,7 @@
                                 <div id="reportProductHiddenInputs"></div>
                             </div>
                         </label>
+
                     </div>
                 </div>
 
@@ -150,14 +152,23 @@
                             </select>
                         </label>
 
-                        <label>
-                            <span>Метод на плащане</span>
-                            <select th:field="*{paymentMethods}" multiple>
+                        <div class="report-payment-field">
+                            <span class="report-filter-label">Метод на плащане</span>
+                            <select th:field="*{paymentMethods}" id="reportPaymentSelect" multiple hidden>
                                 <option th:each="method : ${T(com.opticsappbg.opticsapp.customer.model.PaymentMethod).values()}"
                                         th:value="${method}"
                                         th:text="${method.displayName}"></option>
                             </select>
-                        </label>
+                            <div class="report-payment-picker" id="reportPaymentPicker">
+                                <button type="button" class="report-payment-trigger" id="reportPaymentTrigger">Всички методи</button>
+                                <div class="report-payment-options" id="reportPaymentOptions" hidden>
+                                    <label th:each="method : ${T(com.opticsappbg.opticsapp.customer.model.PaymentMethod).values()}">
+                                        <input type="checkbox" th:value="${method}">
+                                        <span th:text="${method.displayName}"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
                         <label>
                             <span>Групиране</span>
@@ -185,15 +196,12 @@
                                         th:text="${direction.displayName}"></option>
                             </select>
                         </label>
+                        <div class="report-inline-action">
+                            <button type="submit" class="btn-new-order">Генерирай справка</button>
+                        </div>
                     </div>
                 </div>
-                <div class="report-form-actions">
-                    <button type="submit" class="btn-new-order">
-                        Генерирай справка
-                    </button>
-                </div>
-
-            </form>
+                </form>
 
 
 
