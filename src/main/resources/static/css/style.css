@@ -1946,3 +1946,11 @@ body:has(.customer-row) .content-header .order-search-form {
         grid-column: auto;
     }
 }
+
+.report-document-type {
+    display: block;
+    margin-top: 3px;
+    color: #667584;
+    font-size: 11px;
+    font-weight: 400;
+}
