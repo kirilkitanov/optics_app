@@ -1,142 +1,218 @@
-
 document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('.report-filters');
+    const categorySelect = document.getElementById('reportCategorySelect');
+    const categoryPicker = document.getElementById('reportCategoryPicker');
+    const categoryTrigger = document.getElementById('reportCategoryTrigger');
+    const categoryOptions = document.getElementById('reportCategoryOptions');
+    const brandSelect = document.getElementById('reportBrandSelect');
+    const modelSelect = document.getElementById('reportModelSelect');
     const productSelect = document.getElementById('reportProductSelect');
+    const search = document.getElementById('reportProductSearch');
+    const suggestions = document.getElementById('reportProductSuggestions');
+    const selectedList = document.getElementById('reportSelectedProducts');
+    const hiddenInputs = document.getElementById('reportProductHiddenInputs');
 
-    if (!productSelect) {
-        return;
+    if (!form || !productSelect || !brandSelect || !modelSelect || !search) return;
+
+    const products = Array.from(productSelect.options).map(option => ({
+        id: option.value,
+        label: option.textContent.trim(),
+        category: option.dataset.category || '',
+        brand: option.dataset.brand || '',
+        model: option.dataset.model || '',
+        selected: option.selected
+    })).filter(product => product.id);
+
+    // Изборът се изпраща чрез hidden inputs, за да няма дублиране от скрития select.
+    productSelect.removeAttribute('name');
+
+    const selected = new Map(products.filter(p => p.selected).map(p => [p.id, p]));
+    const originalBrand = brandSelect.value;
+    const originalModel = modelSelect.value;
+
+    function normalize(value) {
+        return String(value || '')
+            .toLocaleLowerCase('bg-BG')
+            .replace(/,/g, '.')
+            .replace(/\s+/g, ' ')
+            .trim();
     }
 
-    const form = productSelect.closest('form');
-    const options = Array.from(productSelect.options)
-        .filter(option => option.value !== '');
+    function updateCategoryPicker() {
+        if (!categorySelect || !categoryOptions || !categoryTrigger) return;
+        const selectedValues = new Set(Array.from(categorySelect.selectedOptions).map(option => option.value));
+        categoryOptions.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = selectedValues.has(checkbox.value);
+        });
+        const labels = Array.from(categorySelect.selectedOptions).map(option => option.textContent);
+        categoryTrigger.textContent = labels.length ? labels.join(', ') : 'Всички категории';
+    }
 
-    const selected = new Map();
+    categoryTrigger?.addEventListener('click', () => {
+        categoryOptions.hidden = !categoryOptions.hidden;
+    });
 
-    options.forEach(option => {
-        if (option.selected) {
-            selected.set(option.value, option.textContent.trim());
+    categoryOptions?.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const option = Array.from(categorySelect.options).find(item => item.value === checkbox.value);
+            if (option) option.selected = checkbox.checked;
+            categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+            updateCategoryPicker();
+        });
+    });
+
+    document.addEventListener('click', event => {
+        if (!event.target.closest('#reportCategoryPicker') && categoryOptions) {
+            categoryOptions.hidden = true;
         }
     });
 
-    // Оригиналният select остава само като източник на продуктите.
-    productSelect.removeAttribute('name');
-    productSelect.hidden = true;
+    function getCategories() {
+        return categorySelect
+            ? Array.from(categorySelect.selectedOptions).map(option => option.value)
+            : [];
+    }
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'report-product-picker';
+    function categoryMatches(product) {
+        const categories = getCategories();
+        return categories.length === 0 || categories.includes(product.category);
+    }
 
-    const search = document.createElement('input');
-    search.type = 'text';
-    search.className = 'report-product-search';
-    search.placeholder = 'Търси по бранд, модел, баркод или диоптър...';
-    search.autocomplete = 'off';
+    function fillSelect(select, values, placeholder, selectedValue) {
+        select.replaceChildren();
+        const first = document.createElement('option');
+        first.value = '';
+        first.textContent = placeholder;
+        select.appendChild(first);
 
-    const suggestions = document.createElement('div');
-    suggestions.className = 'report-product-suggestions';
-    suggestions.hidden = true;
+        values.forEach(value => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            select.appendChild(option);
+        });
 
-    const selectedList = document.createElement('div');
-    selectedList.className = 'report-selected-products';
+        if (selectedValue && values.includes(selectedValue)) select.value = selectedValue;
+    }
 
-    const hiddenInputs = document.createElement('div');
-    hiddenInputs.className = 'report-product-hidden-inputs';
+    function refreshBrands(preferredBrand = brandSelect.value) {
+        const available = products.filter(categoryMatches);
+        const brands = [...new Set(available.map(p => p.brand).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, 'bg'));
+        fillSelect(brandSelect, brands, 'Всички брандове', preferredBrand);
 
-    productSelect.parentElement.insertBefore(wrapper, productSelect);
-    wrapper.append(search, suggestions, selectedList, hiddenInputs);
+        if (!brands.includes(brandSelect.value)) brandSelect.value = '';
+        refreshModels(modelSelect.value);
+    }
+
+    function refreshModels(preferredModel = modelSelect.value) {
+        const brand = brandSelect.value;
+        const available = products.filter(p => categoryMatches(p) && (!brand || p.brand === brand));
+        const models = [...new Set(available.map(p => p.model).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, 'bg'));
+
+        fillSelect(modelSelect, models, 'Всички модели', preferredModel);
+        modelSelect.disabled = models.length === 0;
+    }
 
     function renderSelected() {
         selectedList.replaceChildren();
         hiddenInputs.replaceChildren();
 
-        selected.forEach((label, id) => {
-            const item = document.createElement('div');
-            item.className = 'report-selected-product';
+        selected.forEach(product => {
+            const chip = document.createElement('div');
+            chip.className = 'report-selected-product';
 
-            const name = document.createElement('span');
-            name.textContent = label;
+            const label = document.createElement('span');
+            label.textContent = product.label;
 
             const remove = document.createElement('button');
             remove.type = 'button';
             remove.textContent = '×';
             remove.setAttribute('aria-label', 'Премахни продукт');
-
-            remove.addEventListener('click', function () {
-                selected.delete(id);
+            remove.addEventListener('click', () => {
+                selected.delete(product.id);
                 renderSelected();
-                renderSuggestions();
             });
 
-            item.append(name, remove);
-            selectedList.appendChild(item);
+            chip.append(label, remove);
+            selectedList.appendChild(chip);
 
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
             hidden.name = 'productIds';
-            hidden.value = id;
+            hidden.value = product.id;
             hiddenInputs.appendChild(hidden);
         });
     }
 
     function renderSuggestions() {
         suggestions.replaceChildren();
+        const query = normalize(search.value);
 
-        const query = search.value.trim().toLocaleLowerCase('bg-BG');
-
-        if (query.length < 1) {
+        if (!query) {
             suggestions.hidden = true;
             return;
         }
 
-        const matches = options.filter(option => {
-            const label = option.textContent.trim();
-            return !selected.has(option.value)
-                && label.toLocaleLowerCase('bg-BG').includes(query);
-        }).slice(0, 30);
+        const matches = products.filter(product => {
+            if (selected.has(product.id) || !categoryMatches(product)) return false;
+            if (brandSelect.value && product.brand !== brandSelect.value) return false;
+            if (modelSelect.value && product.model !== modelSelect.value) return false;
+            return normalize(product.label).includes(query);
+        }).slice(0, 40);
 
         if (matches.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'report-product-no-results';
-            empty.textContent = 'Няма намерени продукти.';
+            empty.textContent = 'Няма намерени продукти с тази стойност.';
             suggestions.appendChild(empty);
         } else {
-            matches.forEach(option => {
-                const item = document.createElement('button');
-                item.type = 'button';
-                item.className = 'report-product-suggestion';
-                item.textContent = option.textContent.trim();
-
-                item.addEventListener('click', function () {
-                    selected.set(option.value, option.textContent.trim());
+            matches.forEach(product => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'report-product-suggestion';
+                button.textContent = product.label;
+                button.addEventListener('click', () => {
+                    selected.set(product.id, product);
                     search.value = '';
+                    suggestions.hidden = true;
                     renderSelected();
-                    renderSuggestions();
                     search.focus();
                 });
-
-                suggestions.appendChild(item);
+                suggestions.appendChild(button);
             });
         }
 
         suggestions.hidden = false;
     }
 
+    categorySelect?.addEventListener('change', () => {
+        selected.forEach((product, id) => {
+            if (!categoryMatches(product)) selected.delete(id);
+        });
+        refreshBrands('');
+        renderSelected();
+        renderSuggestions();
+    });
+
+    brandSelect.addEventListener('change', () => {
+        refreshModels('');
+        renderSuggestions();
+    });
+
+    modelSelect.addEventListener('change', renderSuggestions);
     search.addEventListener('input', renderSuggestions);
-
-    search.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-            suggestions.hidden = true;
-        }
+    search.addEventListener('keydown', event => {
+        if (event.key === 'Escape') suggestions.hidden = true;
     });
 
-    document.addEventListener('click', function (event) {
-        if (!wrapper.contains(event.target)) {
-            suggestions.hidden = true;
-        }
+    document.addEventListener('click', event => {
+        if (!event.target.closest('#reportProductPicker')) suggestions.hidden = true;
     });
 
+    updateCategoryPicker();
+    refreshBrands(originalBrand);
+    refreshModels(originalModel);
     renderSelected();
-
-    form.addEventListener('submit', function () {
-        // Скритите полета productIds се изпращат заедно с формата.
-    });
 });

@@ -28,70 +28,105 @@
                 <div class="report-filter-section report-sources">
                     <h3>Справка за</h3>
 
-                    <div class="report-checkbox-grid">
-                        <label th:each="source : ${sources}" class="report-checkbox">
-                            <input type="checkbox"
-                                   th:field="*{sources}"
-                                   th:value="${source}">
-                            <span th:text="${source.displayName}"></span>
+                    <div class="report-source-toolbar">
+                        <div class="report-checkbox-grid">
+                            <label th:each="source : ${sources}" class="report-checkbox">
+                                <input type="checkbox"
+                                       th:field="*{sources}"
+                                       th:value="${source}">
+                                <span th:text="${source.displayName}"></span>
+                            </label>
+                        </div>
+                        <div class="report-date-fields">
+                            <label class="report-date-field">
+                                <span>От дата</span>
+                                <input type="date" th:field="*{fromDate}">
+                            </label>
+                            <label class="report-date-field">
+                                <span>До дата</span>
+                                <input type="date" th:field="*{toDate}">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-filter-section report-main-filters">
+                    <h3>Филтриране</h3>
+
+                    <div class="report-product-filters">
+                        <div class="report-category-field">
+                            <span class="report-filter-label">Категория</span>
+                            <select th:field="*{categories}" id="reportCategorySelect" multiple hidden>
+                                <option th:each="category : ${T(com.opticsappbg.opticsapp.product.model.ProductCategory).values()}"
+                                        th:value="${category}"
+                                        th:text="${category.displayName}"></option>
+                            </select>
+                            <div class="report-category-picker" id="reportCategoryPicker">
+                                <button type="button" class="report-category-trigger" id="reportCategoryTrigger">
+                                    Всички категории
+                                </button>
+                                <div class="report-category-options" id="reportCategoryOptions" hidden>
+                                    <label th:each="category : ${T(com.opticsappbg.opticsapp.product.model.ProductCategory).values()}">
+                                        <input type="checkbox" th:value="${category}">
+                                        <span th:text="${category.displayName}"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <label>
+                            <span>Бранд</span>
+                            <select id="reportBrandSelect" th:field="*{brand}">
+                                <option value="">Всички брандове</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Модел</span>
+                            <select id="reportModelSelect" th:field="*{model}" disabled>
+                                <option value="">Всички модели</option>
+                            </select>
+                        </label>
+
+                        <label class="report-product-field">
+                            <span>Конкретен продукт или стойност</span>
+                            <select th:field="*{productIds}" id="reportProductSelect" multiple hidden>
+                                <option th:each="product : ${products}"
+                                        th:value="${product.id}"
+                                        th:attr="data-category=${product.category},
+                                                 data-brand=${product.brand},
+                                                 data-model=${product.model}"
+                                        th:text="${product.brand + ' ' + product.model
+                                        + ' | S' + #numbers.formatDecimal(product.sph, 1, 2, 'POINT')
+                                        + ' C' + #numbers.formatDecimal(product.cyl, 1, 2, 'POINT')
+                                        + ' A' + #numbers.formatDecimal(product.addPower, 1, 2, 'POINT')
+                                        + ' P' + #numbers.formatDecimal(product.prism, 1, 2, 'POINT')
+                                        + (product.sizeOrDiameter != null ? ' | ' + product.sizeOrDiameter : '')
+                                        + (product.barcode != null ? ' | ' + product.barcode : '')}">
+                                </option>
+                            </select>
+                            <div class="report-product-picker" id="reportProductPicker">
+                                <input type="text" id="reportProductSearch"
+                                       class="report-product-search"
+                                       placeholder="Въведи баркод, диоптър, диаметър или друга стойност..."
+                                       autocomplete="off">
+                                <div class="report-product-suggestions" id="reportProductSuggestions" hidden></div>
+                                <div class="report-selected-products" id="reportSelectedProducts"></div>
+                                <div id="reportProductHiddenInputs"></div>
+                            </div>
                         </label>
                     </div>
                 </div>
 
                 <div class="report-filter-section">
-                    <h3>Филтри</h3>
-
-                    <div class="report-filter-grid">
-
-                        <label class="report-date-field">
-                            <span>От дата</span>
-                            <input type="date" th:field="*{fromDate}">
-                        </label>
-
-                        <label class="report-date-field">
-                            <span>До дата</span>
-                            <input type="date" th:field="*{toDate}">
-                        </label>
-
-                        <label>
-                            <span>Категория</span>
-                            <select th:field="*{categories}" multiple>
-                                <option th:each="category : ${T(com.opticsappbg.opticsapp.product.model.ProductCategory).values()}"
-                                        th:value="${category}"
-                                        th:text="${category.displayName}">
-                                </option>
-                            </select>
-                        </label>
-
-                        <label class="report-product-field">
-                            <span>Продукти</span>
-
-                            <select th:field="*{productIds}"
-                                    id="reportProductSelect"
-                                    multiple>
-                                <option th:each="product : ${products}"
-                                        th:value="${product.id}"
-                                        th:text="${product.brand + ' ' + product.model
-                                + ' | SPH ' + product.sph
-                                + ' | CYL ' + product.cyl
-                                + ' | ADD ' + product.addPower
-                                + ' | PRISM ' + product.prism
-                                + (product.sizeOrDiameter != null
-                                    ? ' | ' + product.sizeOrDiameter : '')
-                                + (product.barcode != null
-                                    ? ' | ' + product.barcode : '')}">
-                                </option>
-                            </select>
-                        </label>
-
+                    <h3>Останали филтри</h3>
+                    <div class="report-filter-grid report-secondary-filters">
                         <label>
                             <span>Клиент</span>
                             <select th:field="*{customerId}">
                                 <option value="">Всички клиенти</option>
                                 <option th:each="customer : ${customers}"
                                         th:value="${customer.id}"
-                                        th:text="${customer.fullName + ' (' + customer.phone + ')'}">
-                                </option>
+                                        th:text="${customer.fullName + ' (' + customer.phone + ')'}"></option>
                             </select>
                         </label>
 
@@ -101,8 +136,7 @@
                                 <option value="">Всички доставчици</option>
                                 <option th:each="supplier : ${suppliers}"
                                         th:value="${supplier.id}"
-                                        th:text="${supplier.companyName}">
-                                </option>
+                                        th:text="${supplier.companyName}"></option>
                             </select>
                         </label>
 
@@ -112,18 +146,7 @@
                                 <option value="">Всички потребители</option>
                                 <option th:each="user : ${users}"
                                         th:value="${user.id}"
-                                        th:text="${user.username}">
-                                </option>
-                            </select>
-                        </label>
-
-                        <label>
-                            <span>Тип документ за доставка</span>
-                            <select th:field="*{deliveryDocumentTypes}" multiple>
-                                <option th:each="type : ${T(com.opticsappbg.opticsapp.delivery.model.DeliveryDocumentType).values()}"
-                                        th:value="${type}"
-                                        th:text="${type.displayName}">
-                                </option>
+                                        th:text="${user.username}"></option>
                             </select>
                         </label>
 
@@ -132,8 +155,7 @@
                             <select th:field="*{paymentMethods}" multiple>
                                 <option th:each="method : ${T(com.opticsappbg.opticsapp.customer.model.PaymentMethod).values()}"
                                         th:value="${method}"
-                                        th:text="${method.displayName}">
-                                </option>
+                                        th:text="${method.displayName}"></option>
                             </select>
                         </label>
 
@@ -142,8 +164,7 @@
                             <select th:field="*{primaryGrouping}">
                                 <option th:each="grouping : ${groupings}"
                                         th:value="${grouping}"
-                                        th:text="${grouping.displayName}">
-                                </option>
+                                        th:text="${grouping.displayName}"></option>
                             </select>
                         </label>
 
@@ -152,8 +173,7 @@
                             <select th:field="*{sortBy}">
                                 <option th:each="field : ${sortFields}"
                                         th:value="${field}"
-                                        th:text="${field.displayName}">
-                                </option>
+                                        th:text="${field.displayName}"></option>
                             </select>
                         </label>
 
@@ -162,14 +182,11 @@
                             <select th:field="*{sortDirection}">
                                 <option th:each="direction : ${sortDirections}"
                                         th:value="${direction}"
-                                        th:text="${direction.displayName}">
-                                </option>
+                                        th:text="${direction.displayName}"></option>
                             </select>
                         </label>
-
                     </div>
                 </div>
-
                 <div class="report-form-actions">
                     <button type="submit" class="btn-new-order">
                         Генерирай справка
@@ -225,9 +242,12 @@
                             ? #temporals.format(row.date, 'dd.MM.yyyy HH:mm')
                             : '—'}"></td>
 
-                                    <td th:text="${row.documentNumber != null
-                            ? row.documentNumber
-                            : (row.documentType != null ? row.documentType : '—')}"></td>
+                                    <td>
+                                        <span th:text="${row.documentNumber != null ? row.documentNumber : '—'}"></span>
+                                        <small class="report-document-type"
+                                               th:if="${row.documentType != null}"
+                                               th:text="${row.documentType}"></small>
+                                    </td>
 
                                     <td th:text="${row.productName != null
                             ? row.productName : '—'}"></td>
