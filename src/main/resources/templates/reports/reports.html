@@ -18,8 +18,18 @@
 
         <section class="content report-page">
 
-            <div class="content-header">
+            <div class="content-header report-page-header">
                 <h1 class="page-title-blue">Справки</h1>
+                <div class="report-date-fields">
+                                            <label class="report-date-field">
+                                                <span>От дата</span>
+                                                <input type="date" th:field="*{fromDate}">
+                                            </label>
+                                            <label class="report-date-field">
+                                                <span>До дата</span>
+                                                <input type="date" th:field="*{toDate}">
+                                            </label>
+                                        </div>
             </div>
 
 
@@ -38,16 +48,7 @@
                                 <span th:text="${source.displayName}"></span>
                             </label>
                         </div>
-                        <div class="report-date-fields">
-                            <label class="report-date-field">
-                                <span>От дата</span>
-                                <input type="date" th:field="*{fromDate}">
-                            </label>
-                            <label class="report-date-field">
-                                <span>До дата</span>
-                                <input type="date" th:field="*{toDate}">
-                            </label>
-                        </div>
+                        
                     </div>
                 </div>
 
