@@ -91,7 +91,7 @@
                         <label class="report-product-field">
                             <span>Конкретен продукт или стойност</span>
                             <select th:field="*{productIds}" id="reportProductSelect" multiple hidden>
-                                <option th:each="product : ${products}"
+                                <option th:each="product : ${selectedProducts}"
                                         th:value="${product.id}"
                                         th:attr="data-category=${product.category},
                                                  data-brand=${product.brand},
@@ -108,6 +108,7 @@
                             <div class="report-product-picker" id="reportProductPicker">
                                 <input type="text" id="reportProductSearch"
                                        class="report-product-search"
+                                       th:attr="data-search-url=@{/reports/products/search}, data-filter-url=@{/reports/products/filters}"
                                        placeholder="Въведи баркод, диоптър, диаметър или друга стойност..."
                                        autocomplete="off">
                                 <div class="report-product-suggestions" id="reportProductSuggestions" hidden></div>
