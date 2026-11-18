@@ -50,6 +50,85 @@
                     </div>
                 </div>
 
+                <div class="report-filter-section">
+                    <h3>Останали филтри</h3>
+                    <div class="report-filter-grid report-secondary-filters">
+                        <label>
+                            <span>Клиент</span>
+                            <select th:field="*{customerId}">
+                                <option value="">Всички клиенти</option>
+                                <option th:each="customer : ${customers}"
+                                        th:value="${customer.id}"
+                                        th:text="${customer.fullName + ' (' + customer.phone + ')'}"></option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Доставчик</span>
+                            <select th:field="*{supplierId}">
+                                <option value="">Всички доставчици</option>
+                                <option th:each="supplier : ${suppliers}"
+                                        th:value="${supplier.id}"
+                                        th:text="${supplier.companyName}"></option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Потребител</span>
+                            <select th:field="*{userId}">
+                                <option value="">Всички потребители</option>
+                                <option th:each="user : ${users}"
+                                        th:value="${user.id}"
+                                        th:text="${user.username}"></option>
+                            </select>
+                        </label>
+
+                        <div class="report-payment-field">
+                            <span class="report-filter-label">Метод на плащане</span>
+                            <select th:field="*{paymentMethods}" id="reportPaymentSelect" multiple hidden>
+                                <option th:each="method : ${T(com.opticsappbg.opticsapp.customer.model.PaymentMethod).values()}"
+                                        th:value="${method}"
+                                        th:text="${method.displayName}"></option>
+                            </select>
+                            <div class="report-payment-picker" id="reportPaymentPicker">
+                                <button type="button" class="report-payment-trigger" id="reportPaymentTrigger">Всички методи</button>
+                                <div class="report-payment-options" id="reportPaymentOptions" hidden>
+                                    <label th:each="method : ${T(com.opticsappbg.opticsapp.customer.model.PaymentMethod).values()}">
+                                        <input type="checkbox" th:value="${method}">
+                                        <span th:text="${method.displayName}"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label>
+                            <span>Групиране</span>
+                            <select th:field="*{primaryGrouping}">
+                                <option th:each="grouping : ${groupings}"
+                                        th:value="${grouping}"
+                                        th:text="${grouping.displayName}"></option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Сортиране по</span>
+                            <select th:field="*{sortBy}">
+                                <option th:each="field : ${sortFields}"
+                                        th:value="${field}"
+                                        th:text="${field.displayName}"></option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Посока</span>
+                            <select th:field="*{sortDirection}">
+                                <option th:each="direction : ${sortDirections}"
+                                        th:value="${direction}"
+                                        th:text="${direction.displayName}"></option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
                 <div class="report-filter-section report-main-filters">
                     <h3>Филтриране</h3>
 
@@ -117,76 +196,6 @@
                     </div>
                 </div>
 
-                <div class="report-filter-section">
-                    <h3>Останали филтри</h3>
-                    <div class="report-filter-grid report-secondary-filters">
-                        <label>
-                            <span>Клиент</span>
-                            <select th:field="*{customerId}">
-                                <option value="">Всички клиенти</option>
-                                <option th:each="customer : ${customers}"
-                                        th:value="${customer.id}"
-                                        th:text="${customer.fullName + ' (' + customer.phone + ')'}"></option>
-                            </select>
-                        </label>
-
-                        <label>
-                            <span>Доставчик</span>
-                            <select th:field="*{supplierId}">
-                                <option value="">Всички доставчици</option>
-                                <option th:each="supplier : ${suppliers}"
-                                        th:value="${supplier.id}"
-                                        th:text="${supplier.companyName}"></option>
-                            </select>
-                        </label>
-
-                        <label>
-                            <span>Потребител</span>
-                            <select th:field="*{userId}">
-                                <option value="">Всички потребители</option>
-                                <option th:each="user : ${users}"
-                                        th:value="${user.id}"
-                                        th:text="${user.username}"></option>
-                            </select>
-                        </label>
-
-                        <label>
-                            <span>Метод на плащане</span>
-                            <select th:field="*{paymentMethods}" multiple>
-                                <option th:each="method : ${T(com.opticsappbg.opticsapp.customer.model.PaymentMethod).values()}"
-                                        th:value="${method}"
-                                        th:text="${method.displayName}"></option>
-                            </select>
-                        </label>
-
-                        <label>
-                            <span>Групиране</span>
-                            <select th:field="*{primaryGrouping}">
-                                <option th:each="grouping : ${groupings}"
-                                        th:value="${grouping}"
-                                        th:text="${grouping.displayName}"></option>
-                            </select>
-                        </label>
-
-                        <label>
-                            <span>Сортиране по</span>
-                            <select th:field="*{sortBy}">
-                                <option th:each="field : ${sortFields}"
-                                        th:value="${field}"
-                                        th:text="${field.displayName}"></option>
-                            </select>
-                        </label>
-
-                        <label>
-                            <span>Посока</span>
-                            <select th:field="*{sortDirection}">
-                                <option th:each="direction : ${sortDirections}"
-                                        th:value="${direction}"
-                                        th:text="${direction.displayName}"></option>
-                            </select>
-                        </label>
-                    </div>
-                </div>
                 <div class="report-form-actions">
                     <button type="submit" class="btn-new-order">
                         Генерирай справка
