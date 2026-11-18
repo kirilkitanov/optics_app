@@ -611,16 +611,18 @@
 
 
 .report-sources h3 {
-    margin-bottom: 5px;
+    margin: 0 0 4px;
     font-size: 13px;
     line-height: 1.2;
 }
 
 .report-sources .report-source-toolbar {
-    align-items: center;
+    align-items: flex-start;
 }
 
 .report-sources .report-checkbox-grid {
+    align-items: flex-start;
+    padding-top: 2px;
     gap: 5px 9px;
 }
 
