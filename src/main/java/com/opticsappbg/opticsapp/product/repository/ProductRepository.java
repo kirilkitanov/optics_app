@@ -86,4 +86,29 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("addPower") BigDecimal addPower,
             @Param("prism") BigDecimal prism
     );
+    @Query("SELECT DISTINCT p.category, p.brand, p.model FROM Product p ORDER BY p.category, p.brand, p.model")
+    List<Object[]> findDistinctReportProductFilters();
+
+    @Query(value = """
+            SELECT p.* FROM products p
+            WHERE (:categoryCsv = '' OR instr(',' || :categoryCsv || ',', ',' || p.category || ',') > 0)
+              AND (:brand = '' OR p.brand = :brand)
+              AND (:model = '' OR p.model = :model)
+              AND lower(coalesce(p.brand, '') || ' ' || coalesce(p.model, '') || ' ' ||
+                    's' || printf('%.2f', p.sph) || ' ' ||
+                    'c' || printf('%.2f', p.cyl) || ' ' ||
+                    'a' || printf('%.2f', p.add_power) || ' ' ||
+                    'p' || printf('%.2f', p.prism) || ' ' ||
+                    coalesce(p.size_or_diameter, '') || ' ' || coalesce(p.barcode, ''))
+                    LIKE '%' || lower(:query) || '%'
+            ORDER BY p.brand COLLATE NOCASE, p.model COLLATE NOCASE, p.sph, p.cyl
+            LIMIT 40
+            """, nativeQuery = true)
+    List<Product> searchReportProducts(
+            @Param("query") String query,
+            @Param("categoryCsv") String categoryCsv,
+            @Param("brand") String brand,
+            @Param("model") String model
+    );
 }
+
