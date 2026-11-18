@@ -230,9 +230,12 @@
                             ? #temporals.format(row.date, 'dd.MM.yyyy HH:mm')
                             : '—'}"></td>
 
-                                    <td th:text="${row.documentNumber != null
-                            ? row.documentNumber
-                            : (row.documentType != null ? row.documentType : '—')}"></td>
+                                    <td>
+                                        <span th:text="${row.documentNumber != null ? row.documentNumber : '—'}"></span>
+                                        <small class="report-document-type"
+                                               th:if="${row.documentType != null}"
+                                               th:text="${row.documentType}"></small>
+                                    </td>
 
                                     <td th:text="${row.productName != null
                             ? row.productName : '—'}"></td>
