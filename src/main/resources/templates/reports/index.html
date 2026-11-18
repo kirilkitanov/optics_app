@@ -54,14 +54,25 @@
                     <h3>Филтриране</h3>
 
                     <div class="report-product-filters">
-                        <label class="report-category-field">
-                            <span>Категория</span>
-                            <select th:field="*{categories}" multiple size="1">
+                        <div class="report-category-field">
+                            <span class="report-filter-label">Категория</span>
+                            <select th:field="*{categories}" id="reportCategorySelect" multiple hidden>
                                 <option th:each="category : ${T(com.opticsappbg.opticsapp.product.model.ProductCategory).values()}"
                                         th:value="${category}"
                                         th:text="${category.displayName}"></option>
                             </select>
-                        </label>
+                            <div class="report-category-picker" id="reportCategoryPicker">
+                                <button type="button" class="report-category-trigger" id="reportCategoryTrigger">
+                                    Всички категории
+                                </button>
+                                <div class="report-category-options" id="reportCategoryOptions" hidden>
+                                    <label th:each="category : ${T(com.opticsappbg.opticsapp.product.model.ProductCategory).values()}">
+                                        <input type="checkbox" th:value="${category}">
+                                        <span th:text="${category.displayName}"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                         <label>
                             <span>Бранд</span>
                             <select id="reportBrandSelect" th:field="*{brand}">
