@@ -158,43 +158,85 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshModels(originalModel);
     }
 
-    async function fetchProductMatches() {
+    let nextOffset = 0;
+    let hasMoreMatches = false;
+    let loadingMoreMatches = false;
+    let activeSearchKey = '';
+
+    function buildSearchKey() {
+        return JSON.stringify({
+            query: normalize(search.value),
+            categories: getCategories(),
+            brand: brandSelect.value,
+            model: modelSelect.value
+        });
+    }
+
+    async function fetchProductMatches(reset = false) {
         const query = normalize(search.value);
         if (!query) {
+            requestSequence++;
             currentMatches = [];
+            nextOffset = 0;
+            hasMoreMatches = false;
+            loadingMoreMatches = false;
+            activeSearchKey = '';
             suggestions.replaceChildren();
             suggestions.hidden = true;
             return;
         }
-        const sequence = ++requestSequence;
-        const params = new URLSearchParams({query});
+
+        const searchKey = buildSearchKey();
+        if (reset) {
+            requestSequence++;
+            currentMatches = [];
+            nextOffset = 0;
+            hasMoreMatches = true;
+            activeSearchKey = searchKey;
+            suggestions.scrollTop = 0;
+        } else if (loadingMoreMatches || !hasMoreMatches || searchKey !== activeSearchKey) {
+            return;
+        }
+
+        const sequence = requestSequence;
+        loadingMoreMatches = true;
+        const params = new URLSearchParams({ query, offset: String(nextOffset) });
         getCategories().forEach(category => params.append('categories', category));
         if (brandSelect.value) params.set('brand', brandSelect.value);
         if (modelSelect.value) params.set('model', modelSelect.value);
+
         try {
             const response = await fetch(searchUrl + '?' + params.toString());
             if (!response.ok) throw new Error('Search failed');
             const matches = await response.json();
-            if (sequence !== requestSequence) return;
-            currentMatches = matches;
+            if (sequence !== requestSequence || searchKey !== buildSearchKey()) return;
+
+            currentMatches = reset ? matches : currentMatches.concat(matches);
+            nextOffset += matches.length;
+            hasMoreMatches = matches.length === 40;
             renderSuggestionsFromMatches();
         } catch (error) {
-            suggestions.replaceChildren();
-            const message = document.createElement('div');
-            message.className = 'report-product-no-results';
-            message.textContent = 'Търсенето временно не е достъпно.';
-            suggestions.appendChild(message);
-            suggestions.hidden = false;
+            if (sequence === requestSequence) {
+                suggestions.replaceChildren();
+                const message = document.createElement('div');
+                message.className = 'report-product-no-results';
+                message.textContent = 'Търсенето временно не е достъпно.';
+                suggestions.appendChild(message);
+                suggestions.hidden = false;
+            }
+        } finally {
+            if (sequence === requestSequence) loadingMoreMatches = false;
         }
     }
 
     function renderSuggestions() {
         clearTimeout(searchTimer);
         requestSequence++;
-        searchTimer = setTimeout(fetchProductMatches, 250);
+        searchTimer = setTimeout(() => fetchProductMatches(true), 250);
     }
 
     function renderSuggestionsFromMatches() {
+        const previousScrollTop = suggestions.scrollTop;
         suggestions.replaceChildren();
         activeSuggestionIndex = -1;
         if (!currentMatches.length) {
@@ -229,7 +271,15 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         suggestions.hidden = false;
+        suggestions.scrollTop = previousScrollTop;
     }
+
+    suggestions.addEventListener('scroll', () => {
+        if (!suggestions.hidden && hasMoreMatches && !loadingMoreMatches
+                && suggestions.scrollTop + suggestions.clientHeight >= suggestions.scrollHeight - 45) {
+            fetchProductMatches(false);
+        }
+    });
 
     function setActiveSuggestion(index) {
         const items = Array.from(suggestions.querySelectorAll('.report-product-suggestion'));
