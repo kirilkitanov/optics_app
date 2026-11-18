@@ -76,14 +76,14 @@
                         </div>
                         <label>
                             <span>Бранд</span>
-                            <select id="reportBrandSelect" th:field="*{brand}">
+                            <select id="reportBrandSelect" th:field="*{brand}" th:attr="data-selected-brand=${filter.brand}">
                                 <option value="">Всички брандове</option>
                             </select>
                         </label>
 
                         <label>
                             <span>Модел</span>
-                            <select id="reportModelSelect" th:field="*{model}" disabled>
+                            <select id="reportModelSelect" th:field="*{model}" th:attr="data-selected-model=${filter.model}" disabled>
                                 <option value="">Всички модели</option>
                             </select>
                         </label>
