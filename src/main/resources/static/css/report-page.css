@@ -2,7 +2,7 @@
 .report-page {
     overflow-y: auto;
     min-height: 0;
-    padding: 0 0 18px;
+    padding: 11px 20px 18px;
 }
 
 .report-filters,
@@ -567,4 +567,44 @@
     .report-secondary-filters {
         grid-template-columns: minmax(0, 1fr);
     }
+}
+
+
+/* Consistent alignment for report product filters */
+.report-product-filters > label,
+.report-product-filters > .report-category-field {
+    align-self: end;
+}
+
+.report-product-field {
+    min-width: 0;
+    margin: 0;
+}
+
+.report-product-field > span {
+    display: block;
+    min-height: 15px;
+    line-height: 15px;
+}
+
+.report-product-field .report-product-picker {
+    margin: 0;
+}
+
+.report-product-search {
+    height: 36px;
+    line-height: 20px;
+}
+
+.report-product-suggestion.is-selected {
+    background: #e2edf7;
+    color: #1f4e79;
+    font-weight: 600;
+}
+
+.report-product-suggestion.is-selected::after {
+    content: "✓";
+    float: right;
+    margin-left: 10px;
+    color: #1f4e79;
 }
