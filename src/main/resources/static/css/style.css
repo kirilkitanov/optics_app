@@ -1672,41 +1672,44 @@ body:has(.customer-row) .content-header .order-search-form {
 .report-page {
     overflow-y: auto;
     min-height: 0;
-    padding-bottom: 12px;
+    padding: 0 0 18px;
 }
 
 .report-filters,
 .report-results {
-    background: #ffffff;
-    border-radius: 4px;
-    padding: 9px 12px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    background: #fff;
+    border: 1px solid #e2e7ec;
+    border-radius: 7px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.035);
 }
 
 .report-filter-section {
-    padding: 6px 0;
-    border-bottom: 1px solid #e5e9ed;
+    padding: 4px 0 14px;
+    border-bottom: 1px solid #e8edf1;
+    margin-bottom: 12px;
 }
 
 .report-filter-section h3,
 .report-result-section h3 {
     color: #1f4e79;
-    font-size: 13px;
-    margin: 0 0 7px;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 12px;
 }
 
 .report-checkbox-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px 15px;
+    gap: 8px 20px;
 }
 
 .report-checkbox {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
-    font-size: 12px;
+    gap: 6px;
+    font-size: 13px;
     cursor: pointer;
 }
 
@@ -1716,53 +1719,74 @@ body:has(.customer-row) .content-header .order-search-form {
 
 .report-filter-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 7px 10px;
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    gap: 12px 14px;
     align-items: end;
 }
 
-.report-filter-grid label {
+.report-date-grid {
+    grid-template-columns: minmax(150px, 190px) minmax(150px, 190px) minmax(190px, 1fr);
+    max-width: 760px;
+    margin-bottom: 14px;
+}
+
+.report-filter-grid label,
+.report-product-filters label {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 6px;
     min-width: 0;
-    font-size: 11px;
-    color: #444;
+    font-size: 12px;
+    color: #394653;
+    font-weight: 600;
 }
 
 .report-filter-grid input,
-.report-filter-grid select {
+.report-filter-grid select,
+.report-product-filters select {
     width: 100%;
     min-width: 0;
-    box-sizing: border-box;
-    height: 29px;
-    padding: 4px 6px;
-    border: 1px solid #d5dbe1;
-    border-radius: 4px;
+    height: 36px;
+    padding: 6px 9px;
+    border: 1px solid #cfd7df;
+    border-radius: 5px;
     background: #fff;
-    color: #333;
-    font-size: 12px;
+    color: #293744;
+    font-size: 13px;
+    font-weight: 400;
 }
 
 .report-filter-grid select[multiple] {
-    height: 54px;
-    padding: 3px 5px;
+    height: 68px;
+    padding: 5px 8px;
 }
 
 .report-filter-grid input:focus,
 .report-filter-grid select:focus,
+.report-product-filters select:focus,
 .report-product-search:focus {
     outline: none;
     border-color: #1f4e79;
-    box-shadow: 0 0 0 2px rgba(31, 78, 121, 0.08);
+    box-shadow: 0 0 0 3px rgba(31, 78, 121, 0.09);
 }
 
-.report-date-field {
-    max-width: 165px;
+.report-category-field {
+    max-width: 280px;
+}
+
+.report-product-filters {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(180px, 0.8fr) minmax(320px, 1.8fr);
+    gap: 14px;
+    align-items: start;
+    padding: 14px;
+    background: #f7f9fb;
+    border: 1px solid #e6ebef;
+    border-radius: 6px;
 }
 
 .report-product-field {
-    grid-column: span 2;
+    grid-column: auto;
 }
 
 .report-product-picker {
@@ -1771,26 +1795,28 @@ body:has(.customer-row) .content-header .order-search-form {
 }
 
 .report-product-search {
+    display: block;
     width: 100%;
-    height: 29px;
-    padding: 4px 7px;
-    border: 1px solid #d5dbe1;
-    border-radius: 4px;
-    font-size: 12px;
+    height: 36px;
+    padding: 7px 10px;
+    border: 1px solid #cfd7df;
+    border-radius: 5px;
+    background: #fff;
+    font-size: 13px;
 }
 
 .report-product-suggestions {
     position: absolute;
-    top: calc(100% + 2px);
+    top: calc(100% + 3px);
     left: 0;
     right: 0;
-    z-index: 20;
-    max-height: 220px;
+    z-index: 30;
+    max-height: 260px;
     overflow-y: auto;
     background: #fff;
     border: 1px solid #cbd3dc;
-    border-radius: 4px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    border-radius: 5px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
 }
 
 .report-product-suggestions[hidden] {
@@ -1800,13 +1826,13 @@ body:has(.customer-row) .content-header .order-search-form {
 .report-product-suggestion {
     display: block;
     width: 100%;
-    padding: 7px 9px;
+    padding: 9px 11px;
     border: 0;
     border-bottom: 1px solid #edf0f2;
     background: #fff;
-    color: #333;
+    color: #344452;
     text-align: left;
-    font-size: 11px;
+    font-size: 12px;
     cursor: pointer;
 }
 
@@ -1815,28 +1841,29 @@ body:has(.customer-row) .content-header .order-search-form {
 }
 
 .report-product-no-results {
-    padding: 9px;
+    padding: 11px;
     color: #777;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .report-selected-products {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 4px;
+    gap: 6px;
+    margin-top: 5px;
 }
 
 .report-selected-product {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
     max-width: 100%;
-    padding: 3px 6px;
-    border-radius: 3px;
-    background: #edf3f8;
+    padding: 5px 8px;
+    border-radius: 4px;
+    background: #eaf1f7;
     color: #294b68;
-    font-size: 10px;
+    font-size: 11px;
+    font-weight: 400;
 }
 
 .report-selected-product span {
@@ -1847,7 +1874,7 @@ body:has(.customer-row) .content-header .order-search-form {
     border: 0;
     background: transparent;
     color: #8a3030;
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1;
     cursor: pointer;
 }
@@ -1855,62 +1882,67 @@ body:has(.customer-row) .content-header .order-search-form {
 .report-form-actions {
     display: flex;
     justify-content: flex-end;
-    padding-top: 8px;
+    padding-top: 4px;
 }
 
 .report-form-actions .btn-new-order {
-    padding: 7px 15px;
-    font-size: 12px;
+    padding: 9px 19px;
+    font-size: 13px;
 }
 
 .report-results-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .report-results-header h2 {
     color: #1f4e79;
-    font-size: 16px;
+    font-size: 17px;
     margin: 0;
 }
 
 .report-results-header span {
     color: #777;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .report-result-section {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 @media (max-width: 1100px) {
     .report-filter-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
     }
-}
 
-@media (max-width: 750px) {
-    .report-filter-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .report-product-filters {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
     }
 
     .report-product-field {
-        grid-column: span 2;
+        grid-column: 1 / -1;
     }
 }
 
-@media (max-width: 500px) {
-    .report-filter-grid {
+@media (max-width: 650px) {
+    .report-filters,
+    .report-results {
+        padding: 11px;
+    }
+
+    .report-date-grid,
+    .report-filter-grid,
+    .report-product-filters {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .report-category-field {
+        max-width: none;
     }
 
     .report-product-field {
         grid-column: auto;
-    }
-
-    .report-date-field {
-        max-width: none;
     }
 }
