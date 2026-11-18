@@ -13,8 +13,7 @@ public enum ReportSortField {
     CATEGORY("Категория"),
     CUSTOMER("Клиент"),
     SUPPLIER("Доставчик"),
-    USER("Потребител"),
-    METRIC("Показател");
+    USER("Потребител");
 
     private final String displayName;
 }

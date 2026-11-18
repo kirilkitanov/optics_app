@@ -60,7 +60,6 @@ public class ReportController {
         );
         model.addAllAttributes(reportService.getFilterOptions());
         model.addAttribute("groupings", ReportGrouping.values());
-        model.addAttribute("metrics", ReportMetric.values());
         model.addAttribute("sortFields", ReportSortField.values());
         model.addAttribute("sortDirections", ReportSortDirection.values());
     }

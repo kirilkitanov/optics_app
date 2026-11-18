@@ -45,5 +45,4 @@ public class ReportFilter {
 
     private ReportSortField sortBy = ReportSortField.DATE;
     private ReportSortDirection sortDirection = ReportSortDirection.DESC;
-    private ReportMetric sortMetric = ReportMetric.SALES_AMOUNT;
 }

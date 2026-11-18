@@ -84,27 +84,13 @@ public class SalesReportService {
         sortingService.sort(
                 rows,
                 filter.getSortBy(),
-                filter.getSortDirection(),
-                filter.getSortMetric()
+                filter.getSortDirection()
         );
 
         List<ReportRow> groupedRows = groupingService.group(
                 rows,
                 filter.getPrimaryGrouping()
         );
-
-        if (filter.getSortBy() == com.opticsappbg.opticsapp.report.model.ReportSortField.METRIC
-                && filter.getPrimaryGrouping() != null
-                && filter.getPrimaryGrouping()
-                != com.opticsappbg.opticsapp.report.model.ReportGrouping.NONE) {
-
-            sortingService.sort(
-                    groupedRows,
-                    filter.getSortBy(),
-                    filter.getSortDirection(),
-                    filter.getSortMetric()
-            );
-        }
 
         section.setRows(groupedRows);
         section.setTotals(totals);
