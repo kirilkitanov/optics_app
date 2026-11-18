@@ -244,6 +244,39 @@ document.addEventListener('DOMContentLoaded', function () {
         searchTimer = setTimeout(() => fetchProductMatches(true), 250);
     }
 
+    function renderSelected() {
+        selectedList.replaceChildren();
+        hiddenInputs.replaceChildren();
+
+        selected.forEach(product => {
+            const chip = document.createElement('div');
+            chip.className = 'report-selected-product';
+
+            const label = document.createElement('span');
+            label.textContent = product.label;
+            chip.appendChild(label);
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.textContent = '×';
+            removeButton.setAttribute('aria-label', 'Премахни продукта');
+            removeButton.addEventListener('click', () => {
+                selected.delete(product.id);
+                renderSelected();
+                renderSuggestionsFromMatches();
+                search.focus();
+            });
+            chip.appendChild(removeButton);
+            selectedList.appendChild(chip);
+
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'productIds';
+            hidden.value = product.id;
+            hiddenInputs.appendChild(hidden);
+        });
+    }
+
     function renderSuggestionsFromMatches() {
         const previousScrollTop = suggestions.scrollTop;
         suggestions.replaceChildren();
