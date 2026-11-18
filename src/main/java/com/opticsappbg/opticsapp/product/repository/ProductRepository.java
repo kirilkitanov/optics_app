@@ -101,14 +101,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                     'p' || printf('%.2f', p.prism) || ' ' ||
                     coalesce(p.size_or_diameter, '') || ' ' || coalesce(p.barcode, ''))
                     LIKE '%' || lower(:query) || '%'
-            ORDER BY p.brand COLLATE NOCASE, p.model COLLATE NOCASE, p.sph, p.cyl
-            LIMIT 40
+            ORDER BY p.brand COLLATE NOCASE, p.model COLLATE NOCASE, p.sph, p.cyl, p.id
+            LIMIT 40 OFFSET :offset
             """, nativeQuery = true)
     List<Product> searchReportProducts(
             @Param("query") String query,
             @Param("categoryCsv") String categoryCsv,
             @Param("brand") String brand,
-            @Param("model") String model
+            @Param("model") String model,
+            @Param("offset") int offset
     );
 }
 
