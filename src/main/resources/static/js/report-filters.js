@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const suggestions = document.getElementById('reportProductSuggestions');
     const selectedList = document.getElementById('reportSelectedProducts');
     const hiddenInputs = document.getElementById('reportProductHiddenInputs');
+    const paymentSelect = document.getElementById('reportPaymentSelect');
+    const paymentTrigger = document.getElementById('reportPaymentTrigger');
+    const paymentOptions = document.getElementById('reportPaymentOptions');
+    let activeSuggestionIndex = -1;
 
     if (!form || !productSelect || !brandSelect || !modelSelect || !search) return;
 
@@ -37,6 +41,34 @@ document.addEventListener('DOMContentLoaded', function () {
             .replace(/\s+/g, ' ')
             .trim();
     }
+
+    function updatePaymentPicker() {
+        if (!paymentSelect || !paymentTrigger || !paymentOptions) return;
+        const selectedValues = new Set(Array.from(paymentSelect.selectedOptions).map(option => option.value));
+        paymentOptions.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = selectedValues.has(checkbox.value);
+        });
+        const labels = Array.from(paymentSelect.selectedOptions).map(option => option.textContent);
+        paymentTrigger.textContent = labels.length ? labels.join(', ') : 'Всички методи';
+    }
+
+    paymentTrigger?.addEventListener('click', () => {
+        paymentOptions.hidden = !paymentOptions.hidden;
+    });
+
+    paymentOptions?.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const option = Array.from(paymentSelect.options).find(item => item.value === checkbox.value);
+            if (option) option.selected = checkbox.checked;
+            updatePaymentPicker();
+        });
+    });
+
+    document.addEventListener('click', event => {
+        if (!event.target.closest('#reportPaymentPicker') && paymentOptions) {
+            paymentOptions.hidden = true;
+        }
+    });
 
     function updateCategoryPicker() {
         if (!categorySelect || !categoryOptions || !categoryTrigger) return;
@@ -173,11 +205,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 button.type = 'button';
                 button.className = 'report-product-suggestion';
                 button.textContent = product.label;
+                button.addEventListener('mouseenter', () => setActiveSuggestion(Array.from(suggestions.querySelectorAll('.report-product-suggestion')).indexOf(button)));
                 button.addEventListener('click', () => {
                     selected.set(product.id, product);
-                    search.value = '';
-                    suggestions.hidden = true;
                     renderSelected();
+                    renderSuggestions();
                     search.focus();
                 });
                 suggestions.appendChild(button);
@@ -204,7 +236,20 @@ document.addEventListener('DOMContentLoaded', function () {
     modelSelect.addEventListener('change', renderSuggestions);
     search.addEventListener('input', renderSuggestions);
     search.addEventListener('keydown', event => {
-        if (event.key === 'Escape') suggestions.hidden = true;
+        const items = suggestions.querySelectorAll('.report-product-suggestion');
+        if (event.key === 'ArrowDown' && !suggestions.hidden && items.length) {
+            event.preventDefault();
+            setActiveSuggestion(activeSuggestionIndex + 1);
+        } else if (event.key === 'ArrowUp' && !suggestions.hidden && items.length) {
+            event.preventDefault();
+            setActiveSuggestion(activeSuggestionIndex < 0 ? items.length - 1 : activeSuggestionIndex - 1);
+        } else if (event.key === 'Enter' && !suggestions.hidden && items.length) {
+            event.preventDefault();
+            if (activeSuggestionIndex < 0) setActiveSuggestion(0);
+            chooseActiveSuggestion();
+        } else if (event.key === 'Escape') {
+            suggestions.hidden = true;
+        }
     });
 
     document.addEventListener('click', event => {
