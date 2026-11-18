@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
         selected: option.selected
     })).filter(product => product.id);
 
-    const selected = new Map(products.filter(p => p.selected).map(p => [p.id, p]));
+    // Изборът се изпраща чрез hidden inputs, за да няма дублиране от скрития select.\n    productSelect.removeAttribute('name');\n\n    const selected = new Map(products.filter(p => p.selected).map(p => [p.id, p]));
     const originalBrand = brandSelect.value;
     const originalModel = modelSelect.value;
 
