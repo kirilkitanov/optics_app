@@ -96,10 +96,10 @@
                                                  data-brand=${product.brand},
                                                  data-model=${product.model}"
                                         th:text="${product.brand + ' ' + product.model
-                                        + ' | S' + #numbers.formatDecimal(product.sph, 1, 2)
-                                        + ' C' + #numbers.formatDecimal(product.cyl, 1, 2)
-                                        + ' A' + #numbers.formatDecimal(product.addPower, 1, 2)
-                                        + ' P' + #numbers.formatDecimal(product.prism, 1, 2)
+                                        + ' | S' + #numbers.formatDecimal(product.sph, 1, 2, 'POINT')
+                                        + ' C' + #numbers.formatDecimal(product.cyl, 1, 2, 'POINT')
+                                        + ' A' + #numbers.formatDecimal(product.addPower, 1, 2, 'POINT')
+                                        + ' P' + #numbers.formatDecimal(product.prism, 1, 2, 'POINT')
                                         + (product.sizeOrDiameter != null ? ' | ' + product.sizeOrDiameter : '')
                                         + (product.barcode != null ? ' | ' + product.barcode : '')}">
                                 </option>
