@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentTrigger = document.getElementById('reportPaymentTrigger');
     const paymentOptions = document.getElementById('reportPaymentOptions');
     let activeSuggestionIndex = -1;
+    let currentMatches = [];
+    let lastClickedSuggestionIndex = -1;
 
     if (!form || !productSelect || !brandSelect || !modelSelect || !search) return;
 
@@ -180,34 +182,62 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderSuggestions() {
         suggestions.replaceChildren();
+        activeSuggestionIndex = -1;
         const query = normalize(search.value);
 
         if (!query) {
+            currentMatches = [];
             suggestions.hidden = true;
             return;
         }
 
-        const matches = products.filter(product => {
-            if (selected.has(product.id) || !categoryMatches(product)) return false;
+        currentMatches = products.filter(product => {
+            if (!categoryMatches(product)) return false;
             if (brandSelect.value && product.brand !== brandSelect.value) return false;
             if (modelSelect.value && product.model !== modelSelect.value) return false;
             return normalize(product.label).includes(query);
         }).slice(0, 40);
 
-        if (matches.length === 0) {
+        if (currentMatches.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'report-product-no-results';
             empty.textContent = 'Няма намерени продукти с тази стойност.';
             suggestions.appendChild(empty);
         } else {
-            matches.forEach(product => {
+            currentMatches.forEach((product, index) => {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'report-product-suggestion';
                 button.textContent = product.label;
-                button.addEventListener('mouseenter', () => setActiveSuggestion(Array.from(suggestions.querySelectorAll('.report-product-suggestion')).indexOf(button)));
-                button.addEventListener('click', () => {
-                    selected.set(product.id, product);
+                button.setAttribute('aria-pressed', String(selected.has(product.id)));
+
+                if (selected.has(product.id)) {
+                    button.classList.add('is-selected');
+                }
+
+                // Keep the search input focused so the results remain open while selecting.
+                button.addEventListener('mousedown', event => event.preventDefault());
+                button.addEventListener('mouseenter', () => setActiveSuggestion(index));
+                button.addEventListener('click', event => {
+                    if (event.shiftKey && lastClickedSuggestionIndex >= 0) {
+                        const start = Math.min(lastClickedSuggestionIndex, index);
+                        const end = Math.max(lastClickedSuggestionIndex, index);
+
+                        for (let i = start; i <= end; i++) {
+                            selected.set(currentMatches[i].id, currentMatches[i]);
+                        }
+                    } else if (event.ctrlKey || event.metaKey) {
+                        if (selected.has(product.id)) {
+                            selected.delete(product.id);
+                        } else {
+                            selected.set(product.id, product);
+                        }
+                        lastClickedSuggestionIndex = index;
+                    } else {
+                        selected.set(product.id, product);
+                        lastClickedSuggestionIndex = index;
+                    }
+
                     renderSelected();
                     renderSuggestions();
                     search.focus();
@@ -220,6 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     categorySelect?.addEventListener('change', () => {
+        lastClickedSuggestionIndex = -1;
         selected.forEach((product, id) => {
             if (!categoryMatches(product)) selected.delete(id);
         });
@@ -229,12 +260,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     brandSelect.addEventListener('change', () => {
+        lastClickedSuggestionIndex = -1;
         refreshModels('');
         renderSuggestions();
     });
 
-    modelSelect.addEventListener('change', renderSuggestions);
-    search.addEventListener('input', renderSuggestions);
+    modelSelect.addEventListener('change', () => {
+        lastClickedSuggestionIndex = -1;
+        renderSuggestions();
+    });
+    search.addEventListener('input', () => {
+        lastClickedSuggestionIndex = -1;
+        renderSuggestions();
+    });
     search.addEventListener('keydown', event => {
         const items = suggestions.querySelectorAll('.report-product-suggestion');
         if (event.key === 'ArrowDown' && !suggestions.hidden && items.length) {
