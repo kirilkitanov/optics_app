@@ -7,6 +7,8 @@ import com.opticsappbg.opticsapp.product.model.ProductCategory;
 import com.opticsappbg.opticsapp.report.model.ReportGrouping;
 import com.opticsappbg.opticsapp.report.model.ReportMetric;
 import com.opticsappbg.opticsapp.report.model.ReportSource;
+import com.opticsappbg.opticsapp.report.model.ReportSortDirection;
+import com.opticsappbg.opticsapp.report.model.ReportSortField;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,5 +42,8 @@ public class ReportFilter {
     private Set<ReportMetric> metrics = new LinkedHashSet<>();
 
     private ReportGrouping primaryGrouping = ReportGrouping.NONE;
-    private ReportGrouping secondaryGrouping = ReportGrouping.NONE;
+
+    private ReportSortField sortBy = ReportSortField.DATE;
+    private ReportSortDirection sortDirection = ReportSortDirection.DESC;
+    private ReportMetric sortMetric = ReportMetric.SALES_AMOUNT;
 }

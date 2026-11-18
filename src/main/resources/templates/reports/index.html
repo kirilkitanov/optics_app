@@ -202,11 +202,11 @@
                 </div>
 
                 <div class="report-filter-section">
-                    <h3>Групиране</h3>
+                    <h3>Групиране и сортиране</h3>
 
                     <div class="report-filter-grid">
                         <label>
-                            <span>Основно групиране</span>
+                            <span>Групиране</span>
                             <select th:field="*{primaryGrouping}">
                                 <option th:each="grouping : ${groupings}"
                                         th:value="${grouping}"
@@ -216,11 +216,31 @@
                         </label>
 
                         <label>
-                            <span>Вторично групиране</span>
-                            <select th:field="*{secondaryGrouping}">
-                                <option th:each="grouping : ${groupings}"
-                                        th:value="${grouping}"
-                                        th:text="${grouping.displayName}">
+                            <span>Сортиране по</span>
+                            <select th:field="*{sortBy}">
+                                <option th:each="field : ${sortFields}"
+                                        th:value="${field}"
+                                        th:text="${field.displayName}">
+                                </option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Показател за сортиране</span>
+                            <select th:field="*{sortMetric}">
+                                <option th:each="metric : ${metrics}"
+                                        th:value="${metric}"
+                                        th:text="${metric.displayName}">
+                                </option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Посока</span>
+                            <select th:field="*{sortDirection}">
+                                <option th:each="direction : ${sortDirections}"
+                                        th:value="${direction}"
+                                        th:text="${direction.displayName}">
                                 </option>
                             </select>
                         </label>
@@ -307,99 +327,22 @@
 
                             <!-- Групирани резултати -->
                             <th:block th:unless="${filter.primaryGrouping == null
-                                      or filter.primaryGrouping.name() == 'NONE'}">
+                                or filter.primaryGrouping.name() == 'NONE'}">
 
-                                <th:block th:each="group : ${section.rows}">
+                                <tr th:each="group : ${section.rows}"
+                                    class="report-group-row">
 
-                                    <!-- Основна група и нейните сборове -->
-                                    <tr class="report-group-row">
-                                        <td colspan="6">
-                                            <strong th:text="${group.groupLabel}"></strong>
-                                        </td>
+                                    <td colspan="6">
+                                        <strong th:text="${group.groupLabel}"></strong>
+                                    </td>
 
-                                        <td th:each="metric : ${section.columns}">
-                                            <strong th:text="${group.totals != null
+                                    <td th:each="metric : ${section.columns}">
+                                        <strong th:text="${group.totals != null
                                     and group.totals.getMetricValue(metric) != null
                                     ? group.totals.getMetricValue(metric) : '—'}"></strong>
-                                        </td>
-                                    </tr>
+                                    </td>
+                                </tr>
 
-                                    <th:block th:each="child : ${group.children}">
-
-                                        <!-- Вторична група -->
-                                        <th:block th:if="${child.totals != null}">
-
-                                            <tr class="report-subgroup-row">
-                                                <td colspan="6">
-                                                    <strong th:text="${child.groupLabel}"></strong>
-                                                </td>
-
-                                                <td th:each="metric : ${section.columns}">
-                                                    <strong th:text="${child.totals.getMetricValue(metric) != null
-                                            ? child.totals.getMetricValue(metric) : '—'}"></strong>
-                                                </td>
-                                            </tr>
-
-                                            <!-- Подробни редове във вторичната група -->
-                                            <tr th:each="row : ${child.children}">
-                                                <td th:text="${row.date != null
-                                        ? #temporals.format(row.date, 'dd.MM.yyyy HH:mm')
-                                        : '—'}"></td>
-
-                                                <td th:text="${row.documentNumber != null
-                                        ? row.documentNumber
-                                        : (row.documentType != null ? row.documentType : '—')}"></td>
-
-                                                <td th:text="${row.productName != null
-                                        ? row.productName : '—'}"></td>
-
-                                                <td th:text="${row.customerName != null
-                                        ? row.customerName : '—'}"></td>
-
-                                                <td th:text="${row.supplierName != null
-                                        ? row.supplierName : '—'}"></td>
-
-                                                <td th:text="${row.username != null
-                                        ? row.username : '—'}"></td>
-
-                                                <td th:each="metric : ${section.columns}"
-                                                    th:text="${row.getMetricValue(metric) != null
-                                            ? row.getMetricValue(metric) : '—'}">
-                                                </td>
-                                            </tr>
-
-                                        </th:block>
-
-                                        <!-- Подробни редове при само основно групиране -->
-                                        <tr th:unless="${child.totals != null}">
-                                            <td th:text="${child.date != null
-                                    ? #temporals.format(child.date, 'dd.MM.yyyy HH:mm')
-                                    : '—'}"></td>
-
-                                            <td th:text="${child.documentNumber != null
-                                    ? child.documentNumber
-                                    : (child.documentType != null ? child.documentType : '—')}"></td>
-
-                                            <td th:text="${child.productName != null
-                                    ? child.productName : '—'}"></td>
-
-                                            <td th:text="${child.customerName != null
-                                    ? child.customerName : '—'}"></td>
-
-                                            <td th:text="${child.supplierName != null
-                                    ? child.supplierName : '—'}"></td>
-
-                                            <td th:text="${child.username != null
-                                    ? child.username : '—'}"></td>
-
-                                            <td th:each="metric : ${section.columns}"
-                                                th:text="${child.getMetricValue(metric) != null
-                                        ? child.getMetricValue(metric) : '—'}">
-                                            </td>
-                                        </tr>
-
-                                    </th:block>
-                                </th:block>
                             </th:block>
 
                             <!-- Общо за цялата справка -->

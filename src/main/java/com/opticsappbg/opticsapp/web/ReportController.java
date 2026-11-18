@@ -1,9 +1,7 @@
 
 package com.opticsappbg.opticsapp.web;
 
-import com.opticsappbg.opticsapp.report.model.ReportGrouping;
-import com.opticsappbg.opticsapp.report.model.ReportMetric;
-import com.opticsappbg.opticsapp.report.model.ReportSource;
+import com.opticsappbg.opticsapp.report.model.*;
 import com.opticsappbg.opticsapp.report.service.ReportService;
 import com.opticsappbg.opticsapp.security.AuthenticationDetails;
 import com.opticsappbg.opticsapp.user.model.UserRole;
@@ -63,6 +61,8 @@ public class ReportController {
         model.addAllAttributes(reportService.getFilterOptions());
         model.addAttribute("groupings", ReportGrouping.values());
         model.addAttribute("metrics", ReportMetric.values());
+        model.addAttribute("sortFields", ReportSortField.values());
+        model.addAttribute("sortDirections", ReportSortDirection.values());
     }
 
     private boolean canViewPurchaseValues(AuthenticationDetails user) {

@@ -29,10 +29,12 @@ public class SalesReportService {
 
     private final OrderRepository orderRepository;
     private final ReportGroupingService groupingService;
+    private final ReportSortingService sortingService;
 
-    public SalesReportService(OrderRepository orderRepository, ReportGroupingService groupingService) {
+    public SalesReportService(OrderRepository orderRepository, ReportGroupingService groupingService, ReportSortingService sortingService) {
         this.orderRepository = orderRepository;
         this.groupingService = groupingService;
+        this.sortingService = sortingService;
     }
 
     public ReportSection generate(
@@ -79,11 +81,30 @@ public class SalesReportService {
             }
         }
 
+        sortingService.sort(
+                rows,
+                filter.getSortBy(),
+                filter.getSortDirection(),
+                filter.getSortMetric()
+        );
+
         List<ReportRow> groupedRows = groupingService.group(
                 rows,
-                filter.getPrimaryGrouping(),
-                filter.getSecondaryGrouping()
+                filter.getPrimaryGrouping()
         );
+
+        if (filter.getSortBy() == com.opticsappbg.opticsapp.report.model.ReportSortField.METRIC
+                && filter.getPrimaryGrouping() != null
+                && filter.getPrimaryGrouping()
+                != com.opticsappbg.opticsapp.report.model.ReportGrouping.NONE) {
+
+            sortingService.sort(
+                    groupedRows,
+                    filter.getSortBy(),
+                    filter.getSortDirection(),
+                    filter.getSortMetric()
+            );
+        }
 
         section.setRows(groupedRows);
         section.setTotals(totals);
