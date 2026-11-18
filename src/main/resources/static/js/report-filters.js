@@ -188,6 +188,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function renderSuggestions() {
+        clearTimeout(searchTimer);
+        requestSequence++;
+        searchTimer = setTimeout(fetchProductMatches, 250);
+    }
+
     function renderSuggestionsFromMatches() {
         suggestions.replaceChildren();
         activeSuggestionIndex = -1;
