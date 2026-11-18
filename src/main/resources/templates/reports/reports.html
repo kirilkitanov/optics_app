@@ -23,18 +23,18 @@
                 <div class="report-date-fields">
                                             <label class="report-date-field">
                                                 <span>От дата</span>
-                                                <input type="date" th:field="*{fromDate}">
+                                                <input type="date" name="fromDate" th:value="${filter.fromDate}" form="reportFilterForm">
                                             </label>
                                             <label class="report-date-field">
                                                 <span>До дата</span>
-                                                <input type="date" th:field="*{toDate}">
+                                                <input type="date" name="toDate" th:value="${filter.toDate}" form="reportFilterForm">
                                             </label>
                                         </div>
             </div>
 
 
             <form th:action="@{/reports}" th:object="${filter}"
-                  method="post" class="report-filters">
+                  method="post" id="reportFilterForm" class="report-filters">
 
                 <div class="report-filter-section report-sources">
                     <h3>Справка за</h3>
