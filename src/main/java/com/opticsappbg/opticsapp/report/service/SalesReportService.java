@@ -153,7 +153,7 @@ public class SalesReportService {
                 }
             }
 
-            group.setPaymentsSummary(String.join("\\n", paymentLines));
+            group.setPaymentsSummary(String.join("\n", paymentLines));
             group.setPaymentMethodsSummary(
                     methods.isEmpty() ? null : String.join(", ", methods)
             );
