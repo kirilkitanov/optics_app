@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.querySelector('.report-filters');
     const categorySelect = document.getElementById('reportCategorySelect');
-    const categoryPicker = document.getElementById('reportCategoryPicker');
     const categoryTrigger = document.getElementById('reportCategoryTrigger');
     const categoryOptions = document.getElementById('reportCategoryOptions');
     const brandSelect = document.getElementById('reportBrandSelect');
@@ -20,11 +19,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!form || !productSelect || !brandSelect || !modelSelect || !search) return;
 
-    let products = Array.from(productSelect.options).map(option => ({
-        id: option.value, label: option.textContent.trim(),
-        category: option.dataset.category || '', brand: option.dataset.brand || '',
-        model: option.dataset.model || '', selected: option.selected
-    })).filter(product => product.id);
+    const initiallySelectedProducts = Array.from(productSelect.options)
+        .filter(option => option.value && option.selected)
+        .map(option => ({
+            id: option.value,
+            label: option.textContent.trim(),
+            category: option.dataset.category || '',
+            brand: option.dataset.brand || '',
+            model: option.dataset.model || ''
+        }));
     const searchUrl = search.dataset.searchUrl;
     const filterUrl = search.dataset.filterUrl;
     let filterOptions = [];
@@ -34,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Изборът се изпраща чрез hidden inputs, за да няма дублиране от скрития select.
     productSelect.removeAttribute('name');
 
-    const selected = new Map(products.filter(p => p.selected).map(p => [p.id, p]));
+    const selected = new Map(initiallySelectedProducts.map(product => [product.id, product]));
     const originalBrand = brandSelect.dataset.selectedBrand || brandSelect.value;
     const originalModel = modelSelect.dataset.selectedModel || modelSelect.value;
 
@@ -263,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
             removeButton.addEventListener('click', () => {
                 selected.delete(product.id);
                 renderSelected();
-                renderSuggestionsFromMatches();
+                updateSuggestionSelection();
                 search.focus();
             });
             chip.appendChild(removeButton);
@@ -277,41 +280,81 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function updateSuggestionSelection() {
+        suggestions.querySelectorAll('.report-product-suggestion').forEach(button => {
+            button.classList.toggle('is-selected', selected.has(button.dataset.productId));
+        });
+    }
+
+    function selectSuggestion(index, event) {
+        const match = currentMatches[index];
+        if (!match) return;
+
+        const product = {
+            id: String(match.id),
+            label: match.label,
+            category: match.category,
+            brand: match.brand,
+            model: match.model
+        };
+
+        if (event.shiftKey && lastClickedSuggestionIndex >= 0) {
+            const from = Math.min(lastClickedSuggestionIndex, index);
+            const to = Math.max(lastClickedSuggestionIndex, index);
+
+            if (!event.ctrlKey && !event.metaKey) selected.clear();
+
+            for (let i = from; i <= to; i++) {
+                const rangeMatch = currentMatches[i];
+                const rangeProduct = {
+                    id: String(rangeMatch.id),
+                    label: rangeMatch.label,
+                    category: rangeMatch.category,
+                    brand: rangeMatch.brand,
+                    model: rangeMatch.model
+                };
+                selected.set(rangeProduct.id, rangeProduct);
+            }
+        } else if (event.ctrlKey || event.metaKey) {
+            if (selected.has(product.id)) selected.delete(product.id);
+            else selected.set(product.id, product);
+
+            lastClickedSuggestionIndex = index;
+        } else {
+            selected.clear();
+            selected.set(product.id, product);
+            lastClickedSuggestionIndex = index;
+        }
+
+        renderSelected();
+        updateSuggestionSelection();
+    }
+
     function renderSuggestionsFromMatches() {
         const previousScrollTop = suggestions.scrollTop;
         suggestions.replaceChildren();
         activeSuggestionIndex = -1;
+
         if (!currentMatches.length) {
             const empty = document.createElement('div');
             empty.className = 'report-product-no-results';
             empty.textContent = 'Няма намерени продукти с тази стойност.';
             suggestions.appendChild(empty);
         } else {
-            currentMatches.forEach((item,index) => {
-                const product = {id:String(item.id), label:item.label, category:item.category, brand:item.brand, model:item.model};
-                products = products.filter(existing => existing.id !== product.id);
-                products.push(product);
+            currentMatches.forEach((item, index) => {
                 const button = document.createElement('button');
                 button.type = 'button';
-                button.className = 'report-product-suggestion' + (selected.has(product.id) ? ' is-selected' : '');
-                button.textContent = product.label;
+                button.className = 'report-product-suggestion';
+                button.dataset.productId = String(item.id);
+                button.textContent = item.label;
+                button.classList.toggle('is-selected', selected.has(button.dataset.productId));
                 button.addEventListener('mousedown', event => event.preventDefault());
                 button.addEventListener('mouseenter', () => setActiveSuggestion(index));
-                button.addEventListener('click', event => {
-                    if (event.shiftKey && lastClickedSuggestionIndex >= 0) {
-                        const from=Math.min(lastClickedSuggestionIndex,index), to=Math.max(lastClickedSuggestionIndex,index);
-                        for(let i=from;i<=to;i++){const match=currentMatches[i];const p={id:String(match.id),label:match.label,category:match.category,brand:match.brand,model:match.model};selected.set(p.id,p);}
-                    } else if(event.ctrlKey || event.metaKey) {
-                        if(selected.has(product.id)) selected.delete(product.id); else selected.set(product.id,product);
-                    } else selected.set(product.id,product);
-                    lastClickedSuggestionIndex=index;
-                    renderSelected();
-                    renderSuggestionsFromMatches();
-                    search.focus();
-                });
+                button.addEventListener('click', event => selectSuggestion(index, event));
                 suggestions.appendChild(button);
             });
         }
+
         suggestions.hidden = false;
         suggestions.scrollTop = previousScrollTop;
     }
