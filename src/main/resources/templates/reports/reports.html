@@ -237,7 +237,8 @@
                                 <th>S / C / A / P</th>
                                 <th>Текуща продажна цена</th>
                                 <th th:if="${canViewPurchaseValues}">Текуща доставна цена</th>
-                                <th>Налично количество</th>
+                                <th>Текуща наличност</th>
+                                <th>Брой в продажбата</th>
                                 <th>Продажна цена при продажба</th>
                                 <th th:if="${canViewPurchaseValues}">Доставна цена при продажба</th>
                                 <th th:if="${canViewPurchaseValues}">Печалба</th>
@@ -266,6 +267,7 @@
                                     <td class="report-number" th:if="${canViewPurchaseValues}"
                                         th:text="${row.currentPurchasePrice != null ? #numbers.formatDecimal(row.currentPurchasePrice, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number" th:text="${row.currentQuantity != null ? row.currentQuantity : '—'}"></td>
+                                    <td class="report-number" th:text="${row.quantity != null ? row.quantity : '—'}"></td>
                                     <td class="report-number"
                                         th:text="${row.salePriceAtSale != null ? #numbers.formatDecimal(row.salePriceAtSale, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number" th:if="${canViewPurchaseValues}"
