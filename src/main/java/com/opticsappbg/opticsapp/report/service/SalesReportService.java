@@ -14,6 +14,8 @@ import com.opticsappbg.opticsapp.web.dto.report.ReportFilter;
 import com.opticsappbg.opticsapp.web.dto.report.ReportRow;
 import com.opticsappbg.opticsapp.web.dto.report.ReportSection;
 import com.opticsappbg.opticsapp.web.dto.report.ReportTotals;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ import java.util.*;
 @Transactional(readOnly = true)
 public class SalesReportService {
 
+    private static final Logger log = LoggerFactory.getLogger(SalesReportService.class);
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final int SCALE = 2;
     private static final DateTimeFormatter PAYMENT_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -59,19 +62,39 @@ public class SalesReportService {
         Set<ReportMetric> metrics = resolveMetrics(filter, canViewPurchaseValues);
         section.setColumns(new ArrayList<>(metrics));
 
+        log.info("[REPORT-DIAG] Incoming filters: fromDate={}, toDate={}, grouping={}, sortBy={}, sortDirection={}, sources={}, productIds={}, categories={}, brand={}, model={}, barcode={}, customerId={}, userId={}",
+                filter.getFromDate(), filter.getToDate(), filter.getPrimaryGrouping(),
+                filter.getSortBy(), filter.getSortDirection(), filter.getSources(),
+                filter.getProductIds(), filter.getCategories(), filter.getBrand(),
+                filter.getModel(), filter.getBarcode(), filter.getCustomerId(), filter.getUserId());
+
         List<Order> orders = findOrders(filter);
+        log.info("[REPORT-DIAG] Repository returned {} orders", orders.size());
+
+        int scannedItems = 0;
+        int skippedNullProducts = 0;
+        int matchedItems = 0;
 
         ReportTotals totals = new ReportTotals();
         List<ReportRow> rows = new ArrayList<>();
         Map<Long, Order> eligibleOrders = new LinkedHashMap<>();
 
         for (Order order : orders) {
+            int itemCount = order.getItems() == null ? 0 : order.getItems().size();
+            scannedItems += itemCount;
+            log.info("[REPORT-DIAG] Order id={}, number={}, date={}, status={}, items={}",
+                    order.getId(), order.getOrderNumber(), order.getCreatedOn(),
+                    order.getStatus(), itemCount);
+
             Map<Long, BigDecimal> allocatedSales = allocateSalesAmounts(order);
 
             Set<Long> countedProducts = new HashSet<>();
 
             for (OrderItem item : order.getItems()) {
                 Product product = item.getProduct();
+                if (product == null) {
+                    skippedNullProducts++;
+                }
 
                 if (!matchesProductFilters(product, filter)) {
                     continue;
@@ -87,10 +110,21 @@ public class SalesReportService {
                 );
 
                 rows.add(row);
+                matchedItems++;
+                if (rows.size() <= 3) {
+                    log.info("[REPORT-DIAG] Sample row {}: order={}, itemId={}, productId={}, product={}, sph={}, cyl={}, add={}, prism={}, retailPrice={}, currentQuantity={}, salePriceAtSale={}, quantity={}, user={}",
+                            rows.size(), order.getOrderNumber(), item.getId(), product.getId(),
+                            row.getProductName(), row.getSph(), row.getCyl(), row.getAddPower(),
+                            row.getPrism(), row.getCurrentRetailPrice(), row.getCurrentQuantity(),
+                            row.getSalePriceAtSale(), row.getQuantity(), row.getUsername());
+                }
                 eligibleOrders.put(order.getId(), order);
                 addToTotals(totals, row, canViewPurchaseValues);
             }
         }
+
+        log.info("[REPORT-DIAG] Before sorting: orders={}, scannedItems={}, matchedItems={}, nullProducts={}, rows={}",
+                orders.size(), scannedItems, matchedItems, skippedNullProducts, rows.size());
 
         sortingService.sort(
                 rows,
@@ -103,6 +137,9 @@ public class SalesReportService {
                 filter.getPrimaryGrouping()
         );
 
+        log.info("[REPORT-DIAG] After sorting/grouping: sortedRows={}, groupedRows={}, grouping={}",
+                rows.size(), groupedRows.size(), filter.getPrimaryGrouping());
+
         com.opticsappbg.opticsapp.report.model.ReportGrouping grouping =
                 filter.getPrimaryGrouping();
 
@@ -113,6 +150,7 @@ public class SalesReportService {
 
         section.setRows(groupedRows);
         section.setTotals(totals);
+        log.info("[REPORT-DIAG] Returning section rows={}", section.getRows().size());
 
         return section;
     }
