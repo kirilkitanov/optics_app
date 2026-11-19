@@ -805,3 +805,37 @@
         width: 100%;
     }
 }
+
+
+/* Sales report results table */
+.report-results .table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+.report-results-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    white-space: nowrap;
+}
+.report-results-table th,
+.report-results-table td {
+    padding: 6px 8px;
+    line-height: 1.25;
+}
+.report-results-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.report-results-table .report-number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.report-results-table .report-optical-values {
+    font-variant-numeric: tabular-nums;
+}
+.report-results-table tbody tr:hover {
+    background: #f5f8fb;
+}
