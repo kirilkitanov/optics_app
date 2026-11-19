@@ -22,6 +22,9 @@ public class ReportTotals {
     private BigDecimal paidAmount;
     private BigDecimal refundedAmount;
     private BigDecimal netAmount;
+    private BigDecimal documentAmount;
+    private BigDecimal outstandingAmount;
+    private String paymentStatus;
 
     private Long increaseQuantity;
     private Long decreaseQuantity;
