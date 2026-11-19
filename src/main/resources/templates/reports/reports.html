@@ -225,100 +225,95 @@
                     <h3 th:text="${section.title}"></h3>
 
                     <div class="table-container orders-table">
-                        <table>
+                        <table class="report-results-table">
                             <thead>
                             <tr>
+                                <th>№</th>
                                 <th>Дата</th>
-                                <th>Документ</th>
-                                <th>Продукт / група</th>
                                 <th>Клиент</th>
-                                <th>Доставчик</th>
+                                <th>Документ №</th>
+                                <th>Тип</th>
+                                <th>Бранд / модел</th>
+                                <th>S / C / A / P</th>
+                                <th>Текуща продажна цена</th>
+                                <th th:if="${canViewPurchaseValues}">Текуща доставна цена</th>
+                                <th>Налично количество</th>
+                                <th>Продажна цена при продажба</th>
+                                <th th:if="${canViewPurchaseValues}">Доставна цена при продажба</th>
+                                <th th:if="${canViewPurchaseValues}">Печалба</th>
                                 <th>Потребител</th>
-
-                                <th th:each="metric : ${section.columns}"
-                                    th:text="${metric.displayName}">
-                                </th>
                             </tr>
                             </thead>
 
                             <tbody>
-
-                            <!-- Подробни редове без групиране -->
                             <th:block th:if="${filter.primaryGrouping == null
                                   or filter.primaryGrouping.name() == 'NONE'}">
-
-                                <tr th:each="row : ${section.rows}">
+                                <tr th:each="row, stat : ${section.rows}">
+                                    <td th:text="${stat.count}"></td>
                                     <td th:text="${row.date != null
-                            ? #temporals.format(row.date, 'dd.MM.yyyy HH:mm')
-                            : '—'}"></td>
-
-                                    <td>
-                                        <span th:text="${row.documentNumber != null ? row.documentNumber : '—'}"></span>
-                                        <small class="report-document-type"
-                                               th:if="${row.documentType != null}"
-                                               th:text="${row.documentType}"></small>
-                                    </td>
-
-                                    <td th:text="${row.productName != null
-                            ? row.productName : '—'}"></td>
-
-                                    <td th:text="${row.customerName != null
-                            ? row.customerName : '—'}"></td>
-
-                                    <td th:text="${row.supplierName != null
-                            ? row.supplierName : '—'}"></td>
-
-                                    <td th:text="${row.username != null
-                            ? row.username : '—'}"></td>
-
-                                    <td th:each="metric : ${section.columns}"
-                                        th:text="${row.getMetricValue(metric) != null
-                                ? row.getMetricValue(metric) : '—'}">
-                                    </td>
+                                        ? #temporals.format(row.date, 'dd.MM.yyyy HH:mm') : '—'}"></td>
+                                    <td th:text="${row.customerName != null ? row.customerName : '—'}"></td>
+                                    <td th:text="${row.documentNumber != null ? row.documentNumber : '—'}"></td>
+                                    <td th:text="${row.documentType != null ? row.documentType : '—'}"></td>
+                                    <td th:text="${row.productName != null ? row.productName : '—'}"></td>
+                                    <td class="report-optical-values"
+                                        th:text="'S' + #numbers.formatDecimal(row.sph, 1, 2, 'POINT')
+                                            + ' C' + #numbers.formatDecimal(row.cyl, 1, 2, 'POINT')
+                                            + ' A' + #numbers.formatDecimal(row.addPower, 1, 2, 'POINT')
+                                            + ' P' + #numbers.formatDecimal(row.prism, 1, 2, 'POINT')"></td>
+                                    <td class="report-number"
+                                        th:text="${row.currentRetailPrice != null ? #numbers.formatDecimal(row.currentRetailPrice, 1, 2, 'POINT') : '—'}"></td>
+                                    <td class="report-number" th:if="${canViewPurchaseValues}"
+                                        th:text="${row.currentPurchasePrice != null ? #numbers.formatDecimal(row.currentPurchasePrice, 1, 2, 'POINT') : '—'}"></td>
+                                    <td class="report-number" th:text="${row.currentQuantity != null ? row.currentQuantity : '—'}"></td>
+                                    <td class="report-number"
+                                        th:text="${row.salePriceAtSale != null ? #numbers.formatDecimal(row.salePriceAtSale, 1, 2, 'POINT') : '—'}"></td>
+                                    <td class="report-number" th:if="${canViewPurchaseValues}"
+                                        th:text="${row.purchasePriceAtSale != null ? #numbers.formatDecimal(row.purchasePriceAtSale, 1, 2, 'POINT') : '—'}"></td>
+                                    <td class="report-number" th:if="${canViewPurchaseValues}"
+                                        th:text="${row.profit != null ? #numbers.formatDecimal(row.profit, 1, 2, 'POINT') : '—'}"></td>
+                                    <td th:text="${row.username != null ? row.username : '—'}"></td>
                                 </tr>
-
                             </th:block>
 
-                            <!-- Групирани резултати -->
                             <th:block th:unless="${filter.primaryGrouping == null
                                 or filter.primaryGrouping.name() == 'NONE'}">
-
-                                <tr th:each="group : ${section.rows}"
-                                    class="report-group-row">
-
-                                    <td colspan="6">
-                                        <strong th:text="${group.groupLabel}"></strong>
+                                <tr th:each="group, stat : ${section.rows}" class="report-group-row">
+                                    <td th:text="${stat.count}"></td>
+                                    <td colspan="6"><strong th:text="${group.groupLabel}"></strong></td>
+                                    <td></td>
+                                    <td th:if="${canViewPurchaseValues}"></td>
+                                    <td class="report-number">
+                                        <strong th:text="${group.totals != null and group.totals.quantity != null ? group.totals.quantity : '—'}"></strong>
                                     </td>
-
-                                    <td th:each="metric : ${section.columns}">
-                                        <strong th:text="${group.totals != null
-                                    and group.totals.getMetricValue(metric) != null
-                                    ? group.totals.getMetricValue(metric) : '—'}"></strong>
+                                    <td></td>
+                                    <td th:if="${canViewPurchaseValues}"></td>
+                                    <td class="report-number" th:if="${canViewPurchaseValues}">
+                                        <strong th:text="${group.totals != null and group.totals.profit != null ? #numbers.formatDecimal(group.totals.profit, 1, 2, 'POINT') : '—'}"></strong>
                                     </td>
+                                    <td></td>
                                 </tr>
-
                             </th:block>
 
-                            <!-- Общо за цялата справка -->
-                            <tr th:if="${!#lists.isEmpty(section.rows)}"
-                                class="report-total-row">
-
-                                <td colspan="6">
-                                    <strong>Общо</strong>
+                            <tr th:if="${!#lists.isEmpty(section.rows)}" class="report-total-row">
+                                <td></td>
+                                <td colspan="6"><strong>Общо</strong></td>
+                                <td></td>
+                                <td th:if="${canViewPurchaseValues}"></td>
+                                <td class="report-number">
+                                    <strong th:text="${section.totals.quantity != null ? section.totals.quantity : '—'}"></strong>
                                 </td>
-
-                                <td th:each="metric : ${section.columns}">
-                                    <strong th:text="${section.totals.getMetricValue(metric) != null
-                            ? section.totals.getMetricValue(metric) : '—'}"></strong>
+                                <td></td>
+                                <td th:if="${canViewPurchaseValues}"></td>
+                                <td class="report-number" th:if="${canViewPurchaseValues}">
+                                    <strong th:text="${section.totals.profit != null ? #numbers.formatDecimal(section.totals.profit, 1, 2, 'POINT') : '—'}"></strong>
                                 </td>
+                                <td></td>
                             </tr>
 
                             <tr th:if="${#lists.isEmpty(section.rows)}">
-                                <td colspan="20" class="empty-table-message">
-                                    Няма намерени записи.
-                                </td>
+                                <td colspan="14" class="empty-table-message">Няма намерени записи.</td>
                             </tr>
-
                             </tbody>
                         </table>
                     </div>
