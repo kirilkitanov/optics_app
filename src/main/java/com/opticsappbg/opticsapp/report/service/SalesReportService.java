@@ -214,10 +214,22 @@ public class SalesReportService {
                 ? item.getQuantity().longValue()
                 : 0L);
 
+        row.setSph(product.getSph());
+        row.setCyl(product.getCyl());
+        row.setAddPower(product.getAddPower());
+        row.setPrism(product.getPrism());
+
+        row.setCurrentRetailPrice(product.getRetailPrice());
+        row.setCurrentQuantity(product.getQuantity());
+        row.setSalePriceAtSale(item.getSalePriceAtSale());
+
         row.setPurchaseCount(firstPurchaseOfProduct ? 1L : 0L);
         row.setSalesAmount(salesAmount);
 
         if (canViewPurchaseValues) {
+            row.setCurrentPurchasePrice(product.getPurchasePrice());
+            row.setPurchasePriceAtSale(item.getPurchasePriceAtSale());
+
             if (item.getPurchasePriceAtSale() != null) {
                 row.setPurchaseValue(
                         item.getPurchasePriceAtSale()
