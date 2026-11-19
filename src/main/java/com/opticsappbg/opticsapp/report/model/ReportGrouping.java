@@ -10,6 +10,7 @@ public enum ReportGrouping {
     NONE("Без групиране"),
     DOCUMENT("Документ"),
     DAY("Ден"),
+    WEEK("Седмица"),
     MONTH("Месец"),
     YEAR("Година"),
     PRODUCT("Продукт"),
