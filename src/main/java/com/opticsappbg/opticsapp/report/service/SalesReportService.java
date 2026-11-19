@@ -395,7 +395,9 @@ public class SalesReportService {
         row.setPrism(product.getPrism());
 
         row.setCurrentRetailPrice(product.getRetailPrice());
-        row.setCurrentQuantity(product.getQuantity());
+        row.setCurrentQuantity(product.getQuantity() != null
+                ? product.getQuantity().longValue()
+                : 0L);
         row.setSalePriceAtSale(item.getSalePriceAtSale());
 
         row.setPurchaseCount(firstPurchaseOfProduct ? 1L : 0L);
