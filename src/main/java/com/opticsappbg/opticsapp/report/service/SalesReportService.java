@@ -63,6 +63,7 @@ public class SalesReportService {
 
         ReportTotals totals = new ReportTotals();
         List<ReportRow> rows = new ArrayList<>();
+        Map<Long, Order> eligibleOrders = new LinkedHashMap<>();
 
         for (Order order : orders) {
             Map<Long, BigDecimal> allocatedSales = allocateSalesAmounts(order);
@@ -86,6 +87,7 @@ public class SalesReportService {
                 );
 
                 rows.add(row);
+                eligibleOrders.put(order.getId(), order);
                 addToTotals(totals, row, canViewPurchaseValues);
             }
         }
@@ -101,8 +103,12 @@ public class SalesReportService {
                 filter.getPrimaryGrouping()
         );
 
-        if (filter.getPrimaryGrouping() == com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT) {
-            addDocumentPayments(groupedRows);
+        com.opticsappbg.opticsapp.report.model.ReportGrouping grouping =
+                filter.getPrimaryGrouping();
+
+        if (grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT
+                || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.CUSTOMER) {
+            applyPaymentBalances(groupedRows, eligibleOrders, grouping, totals);
         }
 
         section.setRows(groupedRows);
@@ -111,53 +117,149 @@ public class SalesReportService {
         return section;
     }
 
-    private void addDocumentPayments(List<ReportRow> groupedRows) {
-        List<Long> orderIds = groupedRows.stream()
-                .map(ReportRow::getDocumentId)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
-
-        if (orderIds.isEmpty()) {
+    private void applyPaymentBalances(
+            List<ReportRow> groupedRows,
+            Map<Long, Order> eligibleOrders,
+            com.opticsappbg.opticsapp.report.model.ReportGrouping grouping,
+            ReportTotals sectionTotals
+    ) {
+        if (eligibleOrders.isEmpty()) {
             return;
         }
 
+        List<Long> orderIds = new ArrayList<>(eligibleOrders.keySet());
+
+        Map<Long, BigDecimal> receivedByOrder = new HashMap<>();
+        Map<Long, BigDecimal> refundedByOrder = new HashMap<>();
+        Map<Long, BigDecimal> netPaidByOrder = new HashMap<>();
         Map<Long, List<CustomerPayment>> paymentsByOrder = new HashMap<>();
+
         for (CustomerPayment payment : customerPaymentRepository
                 .findByOrder_IdInOrderByPaymentDateAsc(orderIds)) {
             Long orderId = payment.getOrder().getId();
+            BigDecimal amount = payment.getAmount() == null
+                    ? ZERO : payment.getAmount();
+
+            if (amount.compareTo(ZERO) > 0) {
+                receivedByOrder.merge(orderId, amount, BigDecimal::add);
+            } else if (amount.compareTo(ZERO) < 0) {
+                refundedByOrder.merge(orderId, amount.abs(), BigDecimal::add);
+            }
+
+            netPaidByOrder.merge(orderId, amount, BigDecimal::add);
             paymentsByOrder.computeIfAbsent(orderId, ignored -> new ArrayList<>())
                     .add(payment);
         }
 
+        BigDecimal allDocumentAmount = ZERO;
+        BigDecimal allReceived = ZERO;
+        BigDecimal allRefunded = ZERO;
+        BigDecimal allNetPaid = ZERO;
+
+        for (Order order : eligibleOrders.values()) {
+            BigDecimal documentAmount = order.getTotal() == null
+                    ? ZERO : order.getTotal();
+            BigDecimal received = receivedByOrder.getOrDefault(order.getId(), ZERO);
+            BigDecimal refunded = refundedByOrder.getOrDefault(order.getId(), ZERO);
+            BigDecimal netPaid = netPaidByOrder.getOrDefault(order.getId(), ZERO);
+
+            allDocumentAmount = allDocumentAmount.add(documentAmount);
+            allReceived = allReceived.add(received);
+            allRefunded = allRefunded.add(refunded);
+            allNetPaid = allNetPaid.add(netPaid);
+        }
+
+        sectionTotals.setDocumentAmount(round(allDocumentAmount));
+        sectionTotals.setReceivedAmount(round(allReceived));
+        sectionTotals.setRefundedAmount(round(allRefunded));
+        sectionTotals.setNetAmount(round(allNetPaid));
+        sectionTotals.setOutstandingAmount(round(allDocumentAmount.subtract(allNetPaid)));
+        sectionTotals.setPaymentStatus(resolvePaymentStatus(allDocumentAmount, allNetPaid));
+
         for (ReportRow group : groupedRows) {
-            List<CustomerPayment> payments = paymentsByOrder.get(group.getDocumentId());
-            if (payments == null || payments.isEmpty()) {
-                continue;
-            }
+            BigDecimal documentAmount = ZERO;
+            BigDecimal received = ZERO;
+            BigDecimal refunded = ZERO;
+            BigDecimal netPaid = ZERO;
 
-            List<String> paymentLines = new ArrayList<>();
-            Set<String> methods = new LinkedHashSet<>();
+            if (grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT) {
+                Long orderId = group.getDocumentId();
+                Order order = eligibleOrders.get(orderId);
+                if (order == null) {
+                    continue;
+                }
 
-            for (CustomerPayment payment : payments) {
-                String date = payment.getPaymentDate() != null
-                        ? payment.getPaymentDate().format(PAYMENT_DATE_FORMAT)
-                        : "Без дата";
-                String amount = payment.getAmount() != null
-                        ? payment.getAmount().setScale(SCALE, RoundingMode.HALF_UP).toPlainString()
-                        : "0.00";
+                documentAmount = order.getTotal() == null ? ZERO : order.getTotal();
+                received = receivedByOrder.getOrDefault(orderId, ZERO);
+                refunded = refundedByOrder.getOrDefault(orderId, ZERO);
+                netPaid = netPaidByOrder.getOrDefault(orderId, ZERO);
 
-                paymentLines.add(date + "  " + amount);
-                if (payment.getPaymentMethod() != null) {
-                    methods.add(payment.getPaymentMethod().getDisplayName());
+                List<CustomerPayment> payments = paymentsByOrder.get(orderId);
+                if (payments != null && !payments.isEmpty()) {
+                    List<String> paymentLines = new ArrayList<>();
+                    Set<String> methods = new LinkedHashSet<>();
+
+                    for (CustomerPayment payment : payments) {
+                        String date = payment.getPaymentDate() != null
+                                ? payment.getPaymentDate().format(PAYMENT_DATE_FORMAT)
+                                : "Без дата";
+                        String amount = payment.getAmount() != null
+                                ? payment.getAmount().setScale(SCALE, RoundingMode.HALF_UP).toPlainString()
+                                : "0.00";
+
+                        paymentLines.add(date + "  " + amount);
+                        if (payment.getPaymentMethod() != null) {
+                            methods.add(payment.getPaymentMethod().getDisplayName());
+                        }
+                    }
+
+                    group.setPaymentsSummary(String.join("\n", paymentLines));
+                    group.setPaymentMethodsSummary(
+                            methods.isEmpty() ? null : String.join(", ", methods)
+                    );
+                }
+            } else {
+                Long customerId = group.getCustomerId();
+
+                for (Order order : eligibleOrders.values()) {
+                    if (order.getCustomer() == null
+                            || !Objects.equals(order.getCustomer().getId(), customerId)) {
+                        continue;
+                    }
+
+                    Long orderId = order.getId();
+                    documentAmount = documentAmount.add(
+                            order.getTotal() == null ? ZERO : order.getTotal());
+                    received = received.add(receivedByOrder.getOrDefault(orderId, ZERO));
+                    refunded = refunded.add(refundedByOrder.getOrDefault(orderId, ZERO));
+                    netPaid = netPaid.add(netPaidByOrder.getOrDefault(orderId, ZERO));
                 }
             }
 
-            group.setPaymentsSummary(String.join("\n", paymentLines));
-            group.setPaymentMethodsSummary(
-                    methods.isEmpty() ? null : String.join(", ", methods)
-            );
+            group.setDocumentAmount(round(documentAmount));
+            group.setReceivedAmount(round(received));
+            group.setRefundedAmount(round(refunded));
+            group.setNetAmount(round(netPaid));
+            group.setOutstandingAmount(round(documentAmount.subtract(netPaid)));
+            group.setPaymentStatus(resolvePaymentStatus(documentAmount, netPaid));
         }
+    }
+
+    private String resolvePaymentStatus(
+            BigDecimal documentAmount,
+            BigDecimal netPaid
+    ) {
+        if (netPaid.compareTo(ZERO) <= 0) {
+            return "Неплатена";
+        }
+        if (netPaid.compareTo(documentAmount) >= 0) {
+            return "Платена";
+        }
+        return "Частично платена";
+    }
+
+    private BigDecimal round(BigDecimal value) {
+        return value.setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     private List<Order> findOrders(ReportFilter filter) {
@@ -262,6 +364,10 @@ public class SalesReportService {
 
         row.setCategoryName(product.getCategory() != null
                 ? product.getCategory().getDisplayName()
+                : null);
+
+        row.setCustomerId(order.getCustomer() != null
+                ? order.getCustomer().getId()
                 : null);
 
         row.setCustomerName(order.getCustomer() != null
