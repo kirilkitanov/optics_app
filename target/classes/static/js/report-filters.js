@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.querySelector('.report-filters');
     const categorySelect = document.getElementById('reportCategorySelect');
-    const categoryPicker = document.getElementById('reportCategoryPicker');
     const categoryTrigger = document.getElementById('reportCategoryTrigger');
     const categoryOptions = document.getElementById('reportCategoryOptions');
     const brandSelect = document.getElementById('reportBrandSelect');
@@ -15,24 +14,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentTrigger = document.getElementById('reportPaymentTrigger');
     const paymentOptions = document.getElementById('reportPaymentOptions');
     let activeSuggestionIndex = -1;
+    let currentMatches = [];
+    let lastClickedSuggestionIndex = -1;
 
     if (!form || !productSelect || !brandSelect || !modelSelect || !search) return;
 
-    const products = Array.from(productSelect.options).map(option => ({
-        id: option.value,
-        label: option.textContent.trim(),
-        category: option.dataset.category || '',
-        brand: option.dataset.brand || '',
-        model: option.dataset.model || '',
-        selected: option.selected
-    })).filter(product => product.id);
+    const initiallySelectedProducts = Array.from(productSelect.options)
+        .filter(option => option.value && option.selected)
+        .map(option => ({
+            id: option.value,
+            label: option.textContent.trim(),
+            category: option.dataset.category || '',
+            brand: option.dataset.brand || '',
+            model: option.dataset.model || ''
+        }));
+    const searchUrl = search.dataset.searchUrl;
+    const filterUrl = search.dataset.filterUrl;
+    let filterOptions = [];
+    let searchTimer;
+    let requestSequence = 0;
 
     // Изборът се изпраща чрез hidden inputs, за да няма дублиране от скрития select.
     productSelect.removeAttribute('name');
 
-    const selected = new Map(products.filter(p => p.selected).map(p => [p.id, p]));
-    const originalBrand = brandSelect.value;
-    const originalModel = modelSelect.value;
+    const selected = new Map(initiallySelectedProducts.map(product => [product.id, product]));
+    const originalBrand = brandSelect.dataset.selectedBrand || brandSelect.value;
+    const originalModel = modelSelect.dataset.selectedModel || modelSelect.value;
 
     function normalize(value) {
         return String(value || '')
@@ -128,23 +135,116 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function refreshBrands(preferredBrand = brandSelect.value) {
-        const available = products.filter(categoryMatches);
-        const brands = [...new Set(available.map(p => p.brand).filter(Boolean))]
-            .sort((a, b) => a.localeCompare(b, 'bg'));
+        const categories = getCategories();
+        const available = filterOptions.filter(item => !categories.length || categories.includes(item.category));
+        const brands = [...new Set(available.map(item => item.brand).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'bg'));
         fillSelect(brandSelect, brands, 'Всички брандове', preferredBrand);
-
         if (!brands.includes(brandSelect.value)) brandSelect.value = '';
         refreshModels(modelSelect.value);
     }
 
     function refreshModels(preferredModel = modelSelect.value) {
-        const brand = brandSelect.value;
-        const available = products.filter(p => categoryMatches(p) && (!brand || p.brand === brand));
-        const models = [...new Set(available.map(p => p.model).filter(Boolean))]
-            .sort((a, b) => a.localeCompare(b, 'bg'));
-
+        const categories = getCategories();
+        const available = filterOptions.filter(item =>
+            (!categories.length || categories.includes(item.category)) &&
+            (!brandSelect.value || item.brand === brandSelect.value));
+        const models = [...new Set(available.map(item=>item.model).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'bg'));
         fillSelect(modelSelect, models, 'Всички модели', preferredModel);
         modelSelect.disabled = models.length === 0;
+    }
+
+    async function loadFilterOptions() {
+        const response = await fetch(filterUrl);
+        if (!response.ok) throw new Error('Неуспешно зареждане на продуктовите филтри.');
+        filterOptions = await response.json();
+        refreshBrands(originalBrand);
+        refreshModels(originalModel);
+    }
+
+    let nextOffset = 0;
+    let hasMoreMatches = false;
+    let loadingMoreMatches = false;
+    let activeSearchKey = '';
+
+    function buildSearchKey() {
+        return JSON.stringify({
+            query: normalize(search.value),
+            categories: getCategories(),
+            brand: brandSelect.value,
+            model: modelSelect.value
+        });
+    }
+
+    async function fetchProductMatches(reset = false) {
+        const query = normalize(search.value);
+        if (!query) {
+            requestSequence++;
+            currentMatches = [];
+            nextOffset = 0;
+            hasMoreMatches = false;
+            loadingMoreMatches = false;
+            activeSearchKey = '';
+            suggestions.replaceChildren();
+            suggestions.hidden = true;
+            return;
+        }
+
+        const searchKey = buildSearchKey();
+        if (reset) {
+            requestSequence++;
+            currentMatches = [];
+            nextOffset = 0;
+            hasMoreMatches = true;
+            activeSearchKey = searchKey;
+            suggestions.scrollTop = 0;
+        } else if (loadingMoreMatches || !hasMoreMatches || searchKey !== activeSearchKey) {
+            return;
+        }
+
+        const sequence = requestSequence;
+        loadingMoreMatches = true;
+        const params = new URLSearchParams({ query, offset: String(nextOffset) });
+        getCategories().forEach(category => params.append('categories', category));
+        if (brandSelect.value) params.set('brand', brandSelect.value);
+        if (modelSelect.value) params.set('model', modelSelect.value);
+
+        try {
+            const response = await fetch(searchUrl + '?' + params.toString());
+            if (!response.ok) throw new Error('Search failed');
+            const matches = await response.json();
+            if (sequence !== requestSequence || searchKey !== buildSearchKey()) return;
+
+            currentMatches = reset ? matches : currentMatches.concat(matches);
+            nextOffset += matches.length;
+            hasMoreMatches = matches.length === 40;
+            renderSuggestionsFromMatches();
+        } catch (error) {
+            if (sequence === requestSequence) {
+                suggestions.replaceChildren();
+                const message = document.createElement('div');
+                message.className = 'report-product-no-results';
+                message.textContent = 'Търсенето временно не е достъпно.';
+                suggestions.appendChild(message);
+                suggestions.hidden = false;
+            }
+        } finally {
+            if (sequence === requestSequence) {
+                loadingMoreMatches = false;
+
+                // If the first batch does not fill the visible list, load the next batch automatically.
+                if (hasMoreMatches && !suggestions.hidden
+                        && suggestions.scrollHeight <= suggestions.clientHeight + 2) {
+                    fetchProductMatches(false);
+                }
+            }
+        }
+    }
+
+    function renderSuggestions() {
+        clearTimeout(searchTimer);
+        requestSequence++;
+        loadingMoreMatches = false;
+        searchTimer = setTimeout(() => fetchProductMatches(true), 250);
     }
 
     function renderSelected() {
@@ -157,17 +257,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const label = document.createElement('span');
             label.textContent = product.label;
+            chip.appendChild(label);
 
-            const remove = document.createElement('button');
-            remove.type = 'button';
-            remove.textContent = '×';
-            remove.setAttribute('aria-label', 'Премахни продукт');
-            remove.addEventListener('click', () => {
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.textContent = '×';
+            removeButton.setAttribute('aria-label', 'Премахни продукта');
+            removeButton.addEventListener('click', () => {
                 selected.delete(product.id);
                 renderSelected();
+                updateSuggestionSelection();
+                search.focus();
             });
-
-            chip.append(label, remove);
+            chip.appendChild(removeButton);
             selectedList.appendChild(chip);
 
             const hidden = document.createElement('input');
@@ -178,48 +280,107 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function renderSuggestions() {
-        suggestions.replaceChildren();
-        const query = normalize(search.value);
+    function updateSuggestionSelection() {
+        suggestions.querySelectorAll('.report-product-suggestion').forEach(button => {
+            button.classList.toggle('is-selected', selected.has(button.dataset.productId));
+        });
+    }
 
-        if (!query) {
-            suggestions.hidden = true;
-            return;
+    function selectSuggestion(index, event) {
+        const match = currentMatches[index];
+        if (!match) return;
+
+        const product = {
+            id: String(match.id),
+            label: match.label,
+            category: match.category,
+            brand: match.brand,
+            model: match.model
+        };
+
+        if (event.shiftKey && lastClickedSuggestionIndex >= 0) {
+            const from = Math.min(lastClickedSuggestionIndex, index);
+            const to = Math.max(lastClickedSuggestionIndex, index);
+
+            if (!event.ctrlKey && !event.metaKey) selected.clear();
+
+            for (let i = from; i <= to; i++) {
+                const rangeMatch = currentMatches[i];
+                const rangeProduct = {
+                    id: String(rangeMatch.id),
+                    label: rangeMatch.label,
+                    category: rangeMatch.category,
+                    brand: rangeMatch.brand,
+                    model: rangeMatch.model
+                };
+                selected.set(rangeProduct.id, rangeProduct);
+            }
+        } else if (event.ctrlKey || event.metaKey) {
+            if (selected.has(product.id)) selected.delete(product.id);
+            else selected.set(product.id, product);
+
+            lastClickedSuggestionIndex = index;
+        } else {
+            selected.clear();
+            selected.set(product.id, product);
+            lastClickedSuggestionIndex = index;
         }
 
-        const matches = products.filter(product => {
-            if (selected.has(product.id) || !categoryMatches(product)) return false;
-            if (brandSelect.value && product.brand !== brandSelect.value) return false;
-            if (modelSelect.value && product.model !== modelSelect.value) return false;
-            return normalize(product.label).includes(query);
-        }).slice(0, 40);
+        renderSelected();
+        updateSuggestionSelection();
+    }
 
-        if (matches.length === 0) {
+    function renderSuggestionsFromMatches() {
+        const previousScrollTop = suggestions.scrollTop;
+        suggestions.replaceChildren();
+        activeSuggestionIndex = -1;
+
+        if (!currentMatches.length) {
             const empty = document.createElement('div');
             empty.className = 'report-product-no-results';
             empty.textContent = 'Няма намерени продукти с тази стойност.';
             suggestions.appendChild(empty);
         } else {
-            matches.forEach(product => {
+            currentMatches.forEach((item, index) => {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'report-product-suggestion';
-                button.textContent = product.label;
-                button.addEventListener('mouseenter', () => setActiveSuggestion(Array.from(suggestions.querySelectorAll('.report-product-suggestion')).indexOf(button)));
-                button.addEventListener('click', () => {
-                    selected.set(product.id, product);
-                    renderSelected();
-                    renderSuggestions();
-                    search.focus();
-                });
+                button.dataset.productId = String(item.id);
+                button.textContent = item.label;
+                button.classList.toggle('is-selected', selected.has(button.dataset.productId));
+                button.addEventListener('mousedown', event => event.preventDefault());
+                button.addEventListener('mouseenter', () => setActiveSuggestion(index));
+                button.addEventListener('click', event => selectSuggestion(index, event));
                 suggestions.appendChild(button);
             });
         }
 
         suggestions.hidden = false;
+        suggestions.scrollTop = previousScrollTop;
+    }
+
+    suggestions.addEventListener('scroll', () => {
+        if (!suggestions.hidden && hasMoreMatches && !loadingMoreMatches
+                && suggestions.scrollTop + suggestions.clientHeight >= suggestions.scrollHeight - 45) {
+            fetchProductMatches(false);
+        }
+    });
+
+    function setActiveSuggestion(index) {
+        const items = Array.from(suggestions.querySelectorAll('.report-product-suggestion'));
+        if (!items.length) return;
+        activeSuggestionIndex = Math.max(0,Math.min(index,items.length-1));
+        items.forEach((item,i)=>item.classList.toggle('is-active',i===activeSuggestionIndex));
+        items[activeSuggestionIndex].scrollIntoView({block:'nearest'});
+    }
+
+    function chooseActiveSuggestion() {
+        const item=suggestions.querySelectorAll('.report-product-suggestion')[activeSuggestionIndex];
+        if(item) item.click();
     }
 
     categorySelect?.addEventListener('change', () => {
+        lastClickedSuggestionIndex = -1;
         selected.forEach((product, id) => {
             if (!categoryMatches(product)) selected.delete(id);
         });
@@ -229,12 +390,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     brandSelect.addEventListener('change', () => {
+        lastClickedSuggestionIndex = -1;
         refreshModels('');
         renderSuggestions();
     });
 
-    modelSelect.addEventListener('change', renderSuggestions);
-    search.addEventListener('input', renderSuggestions);
+    modelSelect.addEventListener('change', () => {
+        lastClickedSuggestionIndex = -1;
+        renderSuggestions();
+    });
+    search.addEventListener('input', () => {
+        lastClickedSuggestionIndex = -1;
+        renderSuggestions();
+    });
     search.addEventListener('keydown', event => {
         const items = suggestions.querySelectorAll('.report-product-suggestion');
         if (event.key === 'ArrowDown' && !suggestions.hidden && items.length) {
@@ -257,7 +425,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     updateCategoryPicker();
-    refreshBrands(originalBrand);
-    refreshModels(originalModel);
+    loadFilterOptions().catch(error => console.error(error));
     renderSelected();
 });
