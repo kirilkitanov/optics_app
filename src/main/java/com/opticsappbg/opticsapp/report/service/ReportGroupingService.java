@@ -62,6 +62,7 @@ public class ReportGroupingService {
             groupRow.setProductId(first.getProductId());
             groupRow.setProductName(first.getProductName());
             groupRow.setCategoryName(first.getCategoryName());
+            groupRow.setCustomerId(first.getCustomerId());
             groupRow.setCustomerName(first.getCustomerName());
             groupRow.setSupplierName(first.getSupplierName());
             groupRow.setUsername(first.getUsername());
