@@ -318,11 +318,13 @@
                                 <td class="report-number" th:if="${canViewPurchaseValues}">
                                     <strong th:text="${section.totals.profit != null ? #numbers.formatDecimal(section.totals.profit, 1, 2, 'POINT') : '—'}"></strong>
                                 </td>
+                                <td th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}"></td>
+                                <td th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}"></td>
                                 <td></td>
                             </tr>
 
                             <tr th:if="${#lists.isEmpty(section.rows)}">
-                                <td colspan="14" class="empty-table-message">Няма намерени записи.</td>
+                                <td colspan="17" class="empty-table-message">Няма намерени записи.</td>
                             </tr>
                             </tbody>
                         </table>
