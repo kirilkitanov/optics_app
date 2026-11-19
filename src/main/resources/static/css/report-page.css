@@ -767,11 +767,15 @@
 }
 
 .report-product-filters .report-product-search,
-.report-product-filters .report-category-trigger,
-.report-product-filters > label > select {
+.report-product-filters .report-category-trigger {
     display: block;
     height: 36px;
     margin: 0;
+}
+
+/* The native product select stays hidden; the visible control is the search input. */
+.report-product-filters #reportProductSelect[hidden] {
+    display: none !important;
 }
 
 @media (max-width: 760px) {
