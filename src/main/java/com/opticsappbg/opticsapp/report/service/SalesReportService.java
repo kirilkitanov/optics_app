@@ -249,10 +249,17 @@ public class SalesReportService {
             BigDecimal documentAmount,
             BigDecimal netPaid
     ) {
+        if (documentAmount.compareTo(ZERO) <= 0) {
+            return netPaid.compareTo(ZERO) > 0
+                    ? "Надплатена" : "Платена";
+        }
         if (netPaid.compareTo(ZERO) <= 0) {
             return "Неплатена";
         }
-        if (netPaid.compareTo(documentAmount) >= 0) {
+        if (netPaid.compareTo(documentAmount) > 0) {
+            return "Надплатена";
+        }
+        if (netPaid.compareTo(documentAmount) == 0) {
             return "Платена";
         }
         return "Частично платена";
