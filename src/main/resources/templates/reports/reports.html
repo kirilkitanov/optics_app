@@ -244,6 +244,7 @@
                                 <th th:if="${canViewPurchaseValues}">Печалба</th>
                                 <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Плащания</th>
                                 <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Метод</th>
+                                <th th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}">Стойност на документите</th>
                                 <th th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}">Нетно платено</th>
                                 <th th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}">Остатък</th>
                                 <th th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}">Статус</th>
@@ -305,6 +306,9 @@
                                         th:text="${group.paymentMethodsSummary != null ? group.paymentMethodsSummary : '—'}"></td>
                                     <td class="report-number"
                                         th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
+                                        th:text="${group.documentAmount != null ? #numbers.formatDecimal(group.documentAmount, 1, 2, 'POINT') : '—'}"></td>
+                                    <td class="report-number"
+                                        th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
                                         th:text="${group.netAmount != null ? #numbers.formatDecimal(group.netAmount, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number"
                                         th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
@@ -331,6 +335,9 @@
                                 </td>
                                 <td th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}"></td>
                                 <td th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}"></td>
+                                <td class="report-number"
+                                    th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
+                                    th:text="${section.totals.documentAmount != null ? #numbers.formatDecimal(section.totals.documentAmount, 1, 2, 'POINT') : '—'}"></td>
                                 <td class="report-number"
                                     th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
                                     th:text="${section.totals.netAmount != null ? #numbers.formatDecimal(section.totals.netAmount, 1, 2, 'POINT') : '—'}"></td>
