@@ -35,6 +35,18 @@ public class ReportRow {
     private Long quantity;
     private Long purchaseCount;
 
+    private BigDecimal sph;
+    private BigDecimal cyl;
+    private BigDecimal addPower;
+    private BigDecimal prism;
+
+    private BigDecimal currentRetailPrice;
+    private BigDecimal currentPurchasePrice;
+    private Long currentQuantity;
+
+    private BigDecimal salePriceAtSale;
+    private BigDecimal purchasePriceAtSale;
+
     private BigDecimal salesAmount;
     private BigDecimal deliveryAmount;
     private BigDecimal purchaseValue;
