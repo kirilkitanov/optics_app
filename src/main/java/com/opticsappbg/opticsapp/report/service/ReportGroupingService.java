@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.WeekFields;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -20,6 +23,9 @@ public class ReportGroupingService {
     private static final BigDecimal ZERO = BigDecimal.ZERO;
 
     private static final DateTimeFormatter DAY_FORMAT =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    private static final DateTimeFormatter WEEK_FORMAT =
             DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private static final DateTimeFormatter MONTH_FORMAT =
@@ -73,6 +79,8 @@ public class ReportGroupingService {
                     + value(row.getDocumentNumber());
             case DAY -> row.getDate() == null
                     ? "UNKNOWN" : row.getDate().toLocalDate().toString();
+            case WEEK -> row.getDate() == null
+                    ? "UNKNOWN" : weekKey(row.getDate());
             case MONTH -> row.getDate() == null
                     ? "UNKNOWN" : YearMonth.from(row.getDate()).toString();
             case YEAR -> row.getDate() == null
@@ -96,6 +104,8 @@ public class ReportGroupingService {
             }
             case DAY -> row.getDate() == null
                     ? "Без дата" : row.getDate().format(DAY_FORMAT);
+            case WEEK -> row.getDate() == null
+                    ? "Без дата" : weekLabel(row.getDate());
             case MONTH -> row.getDate() == null
                     ? "Без дата" : row.getDate().format(MONTH_FORMAT);
             case YEAR -> row.getDate() == null
@@ -107,6 +117,21 @@ public class ReportGroupingService {
             case USER -> value(row.getUsername());
             case NONE -> "";
         };
+    }
+
+    private String weekKey(java.time.LocalDateTime date) {
+        WeekFields iso = WeekFields.ISO;
+        return date.get(iso.weekBasedYear()) + "-W"
+                + String.format("%02d", date.get(iso.weekOfWeekBasedYear()));
+    }
+
+    private String weekLabel(java.time.LocalDateTime date) {
+        java.time.LocalDate start = date.toLocalDate()
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        java.time.LocalDate end = start.plusDays(6);
+        return "Седмица " + weekKey(date).substring(6)
+                + " (" + start.format(WEEK_FORMAT)
+                + " – " + end.format(WEEK_FORMAT) + ")";
     }
 
     private ReportTotals calculateTotals(List<ReportRow> rows) {
