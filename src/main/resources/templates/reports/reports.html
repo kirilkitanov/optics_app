@@ -20,16 +20,7 @@
 
             <div class="content-header report-page-header">
                 <h1 class="page-title-blue">Справки</h1>
-                <div class="report-date-fields">
-                                            <label class="report-date-field">
-                                                <span>От дата</span>
-                                                <input type="date" name="fromDate" th:value="${filter.fromDate}" form="reportFilterForm">
-                                            </label>
-                                            <label class="report-date-field">
-                                                <span>До дата</span>
-                                                <input type="date" name="toDate" th:value="${filter.toDate}" form="reportFilterForm">
-                                            </label>
-                                        </div>
+
             </div>
 
 
@@ -37,7 +28,13 @@
                   method="post" id="reportFilterForm" class="report-filters">
 
                 <div class="report-filter-section report-sources">
-                    <h3>Справка за</h3>
+                    <div class="report-source-heading">
+                        <h3>Справка за</h3>
+                        <div class="report-date-labels">
+                            <span>От дата</span>
+                            <span>До дата</span>
+                        </div>
+                    </div>
 
                     <div class="report-source-toolbar">
                         <div class="report-checkbox-grid">
@@ -48,7 +45,10 @@
                                 <span th:text="${source.displayName}"></span>
                             </label>
                         </div>
-                        
+                        <div class="report-date-inputs">
+                            <input type="date" name="fromDate" th:value="${filter.fromDate}" form="reportFilterForm" aria-label="От дата">
+                            <input type="date" name="toDate" th:value="${filter.toDate}" form="reportFilterForm" aria-label="До дата">
+                        </div>
                     </div>
                 </div>
 
