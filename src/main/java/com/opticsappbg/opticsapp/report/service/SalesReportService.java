@@ -1,5 +1,7 @@
 package com.opticsappbg.opticsapp.report.service;
 
+import com.opticsappbg.opticsapp.customer.model.CustomerPayment;
+import com.opticsappbg.opticsapp.customer.repository.CustomerPaymentRepository;
 import com.opticsappbg.opticsapp.order.model.Order;
 import com.opticsappbg.opticsapp.order.model.OrderItem;
 import com.opticsappbg.opticsapp.order.model.OrderStatus;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -26,13 +29,19 @@ public class SalesReportService {
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final int SCALE = 2;
+    private static final DateTimeFormatter PAYMENT_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     private final OrderRepository orderRepository;
+    private final CustomerPaymentRepository customerPaymentRepository;
     private final ReportGroupingService groupingService;
     private final ReportSortingService sortingService;
 
-    public SalesReportService(OrderRepository orderRepository, ReportGroupingService groupingService, ReportSortingService sortingService) {
+    public SalesReportService(OrderRepository orderRepository,
+                              CustomerPaymentRepository customerPaymentRepository,
+                              ReportGroupingService groupingService,
+                              ReportSortingService sortingService) {
         this.orderRepository = orderRepository;
+        this.customerPaymentRepository = customerPaymentRepository;
         this.groupingService = groupingService;
         this.sortingService = sortingService;
     }
@@ -92,10 +101,63 @@ public class SalesReportService {
                 filter.getPrimaryGrouping()
         );
 
+        if (filter.getPrimaryGrouping() == com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT) {
+            addDocumentPayments(groupedRows);
+        }
+
         section.setRows(groupedRows);
         section.setTotals(totals);
 
         return section;
+    }
+
+    private void addDocumentPayments(List<ReportRow> groupedRows) {
+        List<Long> orderIds = groupedRows.stream()
+                .map(ReportRow::getDocumentId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (orderIds.isEmpty()) {
+            return;
+        }
+
+        Map<Long, List<CustomerPayment>> paymentsByOrder = new HashMap<>();
+        for (CustomerPayment payment : customerPaymentRepository
+                .findByOrder_IdInOrderByPaymentDateAsc(orderIds)) {
+            Long orderId = payment.getOrder().getId();
+            paymentsByOrder.computeIfAbsent(orderId, ignored -> new ArrayList<>())
+                    .add(payment);
+        }
+
+        for (ReportRow group : groupedRows) {
+            List<CustomerPayment> payments = paymentsByOrder.get(group.getDocumentId());
+            if (payments == null || payments.isEmpty()) {
+                continue;
+            }
+
+            List<String> paymentLines = new ArrayList<>();
+            Set<String> methods = new LinkedHashSet<>();
+
+            for (CustomerPayment payment : payments) {
+                String date = payment.getPaymentDate() != null
+                        ? payment.getPaymentDate().format(PAYMENT_DATE_FORMAT)
+                        : "Без дата";
+                String amount = payment.getAmount() != null
+                        ? payment.getAmount().setScale(SCALE, RoundingMode.HALF_UP).toPlainString()
+                        : "0.00";
+
+                paymentLines.add(date + "  " + amount);
+                if (payment.getPaymentMethod() != null) {
+                    methods.add(payment.getPaymentMethod().getDisplayName());
+                }
+            }
+
+            group.setPaymentsSummary(String.join("\\n", paymentLines));
+            group.setPaymentMethodsSummary(
+                    methods.isEmpty() ? null : String.join(", ", methods)
+            );
+        }
     }
 
     private List<Order> findOrders(ReportFilter filter) {
