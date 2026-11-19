@@ -242,6 +242,8 @@
                                 <th>Продажна цена при продажба</th>
                                 <th th:if="${canViewPurchaseValues}">Доставна цена при продажба</th>
                                 <th th:if="${canViewPurchaseValues}">Печалба</th>
+                                <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Плащания</th>
+                                <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Метод</th>
                                 <th>Потребител</th>
                             </tr>
                             </thead>
@@ -294,6 +296,10 @@
                                     <td class="report-number" th:if="${canViewPurchaseValues}">
                                         <strong th:text="${group.totals != null and group.totals.profit != null ? #numbers.formatDecimal(group.totals.profit, 1, 2, 'POINT') : '—'}"></strong>
                                     </td>
+                                    <td class="report-payment-summary" th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}"
+                                        th:text="${group.paymentsSummary != null ? group.paymentsSummary : '—'}"></td>
+                                    <td th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}"
+                                        th:text="${group.paymentMethodsSummary != null ? group.paymentMethodsSummary : '—'}"></td>
                                     <td></td>
                                 </tr>
                             </th:block>
