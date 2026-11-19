@@ -31,6 +31,8 @@ public class ReportRow {
     private String groupLabel;
 
     private PaymentMethod paymentMethod;
+    private String paymentsSummary;
+    private String paymentMethodsSummary;
 
     private Long quantity;
     private Long purchaseCount;
