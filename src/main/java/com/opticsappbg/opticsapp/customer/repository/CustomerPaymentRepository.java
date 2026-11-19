@@ -21,4 +21,6 @@ public interface CustomerPaymentRepository
 
     List<CustomerPayment> findByOrder_IdOrderByPaymentDateDesc(Long orderId);
 
+    List<CustomerPayment> findByOrder_IdInOrderByPaymentDateAsc(List<Long> orderIds);
+
 }
