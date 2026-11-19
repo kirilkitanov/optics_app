@@ -24,6 +24,7 @@ public class ReportRow {
     private String productName;
     private String categoryName;
 
+    private Long customerId;
     private String customerName;
     private String supplierName;
     private String username;
@@ -58,6 +59,9 @@ public class ReportRow {
     private BigDecimal paidAmount;
     private BigDecimal refundedAmount;
     private BigDecimal netAmount;
+    private BigDecimal documentAmount;
+    private BigDecimal outstandingAmount;
+    private String paymentStatus;
 
     private Long increaseQuantity;
     private Long decreaseQuantity;
