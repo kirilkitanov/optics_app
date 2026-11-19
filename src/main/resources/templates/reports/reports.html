@@ -285,6 +285,7 @@
                                     <td colspan="6"><strong th:text="${group.groupLabel}"></strong></td>
                                     <td></td>
                                     <td th:if="${canViewPurchaseValues}"></td>
+                                    <td></td>
                                     <td class="report-number">
                                         <strong th:text="${group.totals != null and group.totals.quantity != null ? group.totals.quantity : '—'}"></strong>
                                     </td>
@@ -302,6 +303,7 @@
                                 <td colspan="6"><strong>Общо</strong></td>
                                 <td></td>
                                 <td th:if="${canViewPurchaseValues}"></td>
+                                <td></td>
                                 <td class="report-number">
                                     <strong th:text="${section.totals.quantity != null ? section.totals.quantity : '—'}"></strong>
                                 </td>
