@@ -244,6 +244,9 @@
                                 <th th:if="${canViewPurchaseValues}">Печалба</th>
                                 <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Плащания</th>
                                 <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Метод</th>
+                                <th th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}">Нетно платено</th>
+                                <th th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}">Остатък</th>
+                                <th th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}">Статус</th>
                                 <th>Потребител</th>
                             </tr>
                             </thead>
@@ -300,6 +303,14 @@
                                         th:text="${group.paymentsSummary != null ? group.paymentsSummary : '—'}"></td>
                                     <td th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}"
                                         th:text="${group.paymentMethodsSummary != null ? group.paymentMethodsSummary : '—'}"></td>
+                                    <td class="report-number"
+                                        th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
+                                        th:text="${group.netAmount != null ? #numbers.formatDecimal(group.netAmount, 1, 2, 'POINT') : '—'}"></td>
+                                    <td class="report-number"
+                                        th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
+                                        th:text="${group.outstandingAmount != null ? #numbers.formatDecimal(group.outstandingAmount, 1, 2, 'POINT') : '—'}"></td>
+                                    <td th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
+                                        th:text="${group.paymentStatus != null ? group.paymentStatus : '—'}"></td>
                                     <td></td>
                                 </tr>
                             </th:block>
@@ -320,6 +331,13 @@
                                 </td>
                                 <td th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}"></td>
                                 <td th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}"></td>
+                                <td class="report-number"
+                                    th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
+                                    th:text="${section.totals.netAmount != null ? #numbers.formatDecimal(section.totals.netAmount, 1, 2, 'POINT') : '—'}"></td>
+                                <td class="report-number"
+                                    th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"
+                                    th:text="${section.totals.outstandingAmount != null ? #numbers.formatDecimal(section.totals.outstandingAmount, 1, 2, 'POINT') : '—'}"></td>
+                                <td th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}"></td>
                                 <td></td>
                             </tr>
 
