@@ -88,7 +88,7 @@ public class ReportGroupingService {
                     ? "UNKNOWN" : String.valueOf(row.getDate().getYear());
             case PRODUCT -> value(row.getProductId());
             case CATEGORY -> value(row.getCategoryName());
-            case CUSTOMER -> value(row.getCustomerName());
+            case CUSTOMER -> value(row.getCustomerId());
             case SUPPLIER -> value(row.getSupplierName());
             case USER -> value(row.getUsername());
             case NONE -> "";
