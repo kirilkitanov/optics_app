@@ -6,7 +6,6 @@ import com.opticsappbg.opticsapp.delivery.model.DeliveryDocumentType;
 import com.opticsappbg.opticsapp.delivery.model.DeliveryItem;
 import com.opticsappbg.opticsapp.delivery.repository.DeliveryRepository;
 import com.opticsappbg.opticsapp.product.model.Product;
-import com.opticsappbg.opticsapp.product.model.ProductCategory;
 import com.opticsappbg.opticsapp.report.model.ReportGrouping;
 import com.opticsappbg.opticsapp.report.model.ReportMetric;
 import com.opticsappbg.opticsapp.report.model.ReportSource;
@@ -140,7 +139,7 @@ public class DeliveryReportService {
         Set<DeliveryDocumentType> types = filter.getDeliveryDocumentTypes() == null
                 ? Set.of() : filter.getDeliveryDocumentTypes();
 
-        return deliveryRepository.findAllForSearch(fromDate, toDate).stream()
+        return deliveryRepository.findAllForReport(fromDate, toDate).stream()
                 .filter(d -> filter.getSupplierId() == null
                         || (d.getSupplier() != null
                         && filter.getSupplierId().equals(d.getSupplier().getId())))
