@@ -38,6 +38,21 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     Optional<Delivery> findFirstByItems_Product_IdOrderByInvoiceDateDescIdDesc(Long productId);
 
     @Query("""
+    SELECT DISTINCT d FROM Delivery d
+    JOIN FETCH d.supplier s
+    LEFT JOIN FETCH d.createdBy
+    LEFT JOIN FETCH d.items i
+    LEFT JOIN FETCH i.product
+    WHERE (:startDate IS NULL OR d.invoiceDate >= :startDate)
+      AND (:endDate IS NULL OR d.invoiceDate < :endDate)
+    ORDER BY d.invoiceDate DESC
+    """)
+    List<Delivery> findAllForReport(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    @Query("""
     SELECT d FROM Delivery d
     JOIN FETCH d.supplier s
     WHERE (:startDate IS NULL OR d.invoiceDate >= :startDate)
