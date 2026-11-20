@@ -117,7 +117,9 @@ public class DeliveryReportService {
         if (grouping == ReportGrouping.CUSTOMER) {
             grouping = ReportGrouping.SUPPLIER;
         }
-        List<ReportRow> groupedRows = groupingService.group(rows, grouping);
+        List<ReportRow> groupedRows = grouping == ReportGrouping.DOCUMENT
+                ? groupDeliveriesByDocument(rows, eligibleDeliveries)
+                : groupingService.group(rows, grouping);
 
         if (grouping == ReportGrouping.DOCUMENT
                 || grouping == ReportGrouping.SUPPLIER
@@ -133,6 +135,84 @@ public class DeliveryReportService {
         section.setRows(groupedRows);
         section.setTotals(totals);
         return section;
+    }
+
+    /**
+     * За справката за доставки документът е самостоятелна единица.
+     * Не използваме общото групиране на редове по текстов ключ, а изграждаме
+     * точно един резултатен ред за всеки реален документ, преминал филтрите.
+     */
+    private List<ReportRow> groupDeliveriesByDocument(
+            List<ReportRow> rows,
+            Map<Long, Delivery> eligibleDeliveries
+    ) {
+        Map<Long, List<ReportRow>> rowsByDelivery = new HashMap<>();
+        for (ReportRow row : rows) {
+            if (row.getDocumentId() != null) {
+                rowsByDelivery.computeIfAbsent(row.getDocumentId(), ignored -> new ArrayList<>())
+                        .add(row);
+            }
+        }
+
+        List<ReportRow> result = new ArrayList<>();
+        for (Delivery delivery : eligibleDeliveries.values()) {
+            List<ReportRow> children = rowsByDelivery.get(delivery.getId());
+            if (children == null || children.isEmpty()) {
+                continue;
+            }
+
+            ReportRow group = new ReportRow();
+            group.setDate(delivery.getInvoiceDate());
+            group.setDocumentId(delivery.getId());
+            group.setDocumentNumber(delivery.getInvoiceNumber());
+            group.setDocumentType(delivery.getDocumentType() == null
+                    ? null : delivery.getDocumentType().getDisplayName());
+            group.setSupplierName(delivery.getSupplier() == null
+                    ? null : delivery.getSupplier().getCompanyName());
+            group.setUsername(delivery.getCreatedBy() == null
+                    ? null : delivery.getCreatedBy().getFullName());
+            group.setGroupLabel(group.getDocumentType() == null
+                    ? String.valueOf(group.getDocumentNumber())
+                    : group.getDocumentType() + " № " + group.getDocumentNumber());
+            group.setChildren(new ArrayList<>(children));
+            group.setTotals(calculateDocumentTotals(children));
+            result.add(group);
+        }
+
+        return result;
+    }
+
+    private ReportTotals calculateDocumentTotals(List<ReportRow> rows) {
+        ReportTotals totals = new ReportTotals();
+        Set<Long> productIds = new HashSet<>();
+        long quantity = 0L;
+        BigDecimal deliveryAmount = ZERO;
+        BigDecimal purchaseValue = ZERO;
+        boolean hasPurchaseValue = false;
+
+        for (ReportRow row : rows) {
+            if (row.getQuantity() != null) {
+                quantity += row.getQuantity();
+            }
+            if (row.getProductId() != null) {
+                productIds.add(row.getProductId());
+            }
+            if (row.getDeliveryAmount() != null) {
+                deliveryAmount = deliveryAmount.add(row.getDeliveryAmount());
+            }
+            if (row.getPurchaseValue() != null) {
+                purchaseValue = purchaseValue.add(row.getPurchaseValue());
+                hasPurchaseValue = true;
+            }
+        }
+
+        totals.setQuantity(quantity);
+        totals.setPurchaseCount((long) productIds.size());
+        totals.setDeliveryAmount(round(deliveryAmount));
+        if (hasPurchaseValue) {
+            totals.setPurchaseValue(round(purchaseValue));
+        }
+        return totals;
     }
 
     private List<Delivery> findDeliveries(ReportFilter filter) {
