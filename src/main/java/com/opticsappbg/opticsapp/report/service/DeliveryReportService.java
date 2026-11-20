@@ -89,6 +89,7 @@ public class DeliveryReportService {
 
             boolean hasMatchingItem = false;
             Set<Long> countedProducts = new HashSet<>();
+            Map<Long, BigDecimal> allocatedAmounts = allocateDeliveryAmounts(delivery);
             for (DeliveryItem item : delivery.getItems()) {
                 Product product = item.getProduct();
                 if (!matchesProductFilters(product, filter)) {
@@ -98,6 +99,7 @@ public class DeliveryReportService {
                 hasMatchingItem = true;
                 ReportRow row = createRow(
                         delivery, item, product,
+                        allocatedAmounts.getOrDefault(item.getId(), ZERO),
                         countedProducts.add(product.getId()), canViewPurchaseValues
                 );
                 rows.add(row);
@@ -173,6 +175,7 @@ public class DeliveryReportService {
             Delivery delivery,
             DeliveryItem item,
             Product product,
+            BigDecimal lineAmount,
             boolean firstOccurrenceOfProduct,
             boolean canViewPurchaseValues
     ) {
@@ -199,15 +202,6 @@ public class DeliveryReportService {
         row.setPrism(product.getPrism());
         row.setCurrentQuantity(product.getQuantity() == null ? 0L : product.getQuantity().longValue());
 
-        BigDecimal lineAmount = item.getPurchasePriceAtDelivery() == null
-                ? ZERO
-                : item.getPurchasePriceAtDelivery()
-                    .multiply(BigDecimal.valueOf(item.getQuantity() == null ? 0 : item.getQuantity()));
-
-        if (delivery.getDocumentType() == DeliveryDocumentType.CREDIT_NOTE) {
-            lineAmount = lineAmount.negate();
-        }
-
         row.setDeliveryAmount(round(lineAmount));
 
         if (canViewPurchaseValues) {
@@ -217,6 +211,50 @@ public class DeliveryReportService {
         }
 
         return row;
+    }
+
+    private Map<Long, BigDecimal> allocateDeliveryAmounts(Delivery delivery) {
+        Map<Long, BigDecimal> result = new LinkedHashMap<>();
+        List<DeliveryItem> items = delivery.getItems();
+
+        if (items == null || items.isEmpty()) return result;
+
+        BigDecimal totalWeight = ZERO;
+        for (DeliveryItem item : items) {
+            if (item.getPurchasePriceAtDelivery() != null && item.getQuantity() != null) {
+                totalWeight = totalWeight.add(
+                        item.getPurchasePriceAtDelivery()
+                                .multiply(BigDecimal.valueOf(item.getQuantity()))
+                );
+            }
+        }
+
+        BigDecimal documentTotal = delivery.getTotalAmount() == null
+                ? ZERO : delivery.getTotalAmount();
+        BigDecimal allocated = ZERO;
+
+        for (int i = 0; i < items.size(); i++) {
+            DeliveryItem item = items.get(i);
+            BigDecimal amount;
+
+            if (i == items.size() - 1) {
+                amount = documentTotal.subtract(allocated);
+            } else if (totalWeight.compareTo(ZERO) > 0
+                    && item.getPurchasePriceAtDelivery() != null
+                    && item.getQuantity() != null) {
+                BigDecimal weight = item.getPurchasePriceAtDelivery()
+                        .multiply(BigDecimal.valueOf(item.getQuantity()));
+                amount = weight.multiply(documentTotal)
+                        .divide(totalWeight, SCALE, RoundingMode.HALF_UP);
+                allocated = allocated.add(amount);
+            } else {
+                amount = ZERO.setScale(SCALE, RoundingMode.HALF_UP);
+            }
+
+            result.put(item.getId(), amount);
+        }
+
+        return result;
     }
 
     private void applyPaymentBalances(
