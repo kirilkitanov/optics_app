@@ -349,6 +349,7 @@
                                 <th>Брой в продажбата</th>
                                 <th>Отстъпка</th>
                                 <th>Продажна цена след отстъпка</th>
+                                <th>Стойност на реда</th>
                                 <th th:if="${canViewPurchaseValues}">Доставна цена при продажба</th>
                                 <th th:if="${canViewPurchaseValues}">Печалба</th>
                                 <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Плащания</th>
@@ -387,6 +388,8 @@
                                         th:text="${row.discountPercentage != null ? #numbers.formatDecimal(row.discountPercentage, 1, 2, 'POINT') + '%' : '0%'}"></td>
                                     <td class="report-number"
                                         th:text="${row.salePriceAtSale != null ? #numbers.formatDecimal(row.salePriceAtSale, 1, 2, 'POINT') : '—'}"></td>
+                                    <td class="report-number"
+                                        th:text="${row.salesAmount != null ? #numbers.formatDecimal(row.salesAmount, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number" th:if="${canViewPurchaseValues}"
                                         th:text="${row.purchasePriceAtSale != null ? #numbers.formatDecimal(row.purchasePriceAtSale, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number" th:if="${canViewPurchaseValues}"
@@ -441,6 +444,9 @@
                                 </td>
                                 <td></td>
                                 <td></td>
+                                <td class="report-number">
+                                    <strong th:text="${section.totals.salesAmount != null ? #numbers.formatDecimal(section.totals.salesAmount, 1, 2, 'POINT') : '—'}"></strong>
+                                </td>
                                 <td th:if="${canViewPurchaseValues}"></td>
                                 <td class="report-number" th:if="${canViewPurchaseValues}">
                                     <strong th:text="${section.totals.profit != null ? #numbers.formatDecimal(section.totals.profit, 1, 2, 'POINT') : '—'}"></strong>
