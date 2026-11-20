@@ -153,6 +153,7 @@ public class SalesReportService {
             allNetPaid = allNetPaid.add(netPaidByOrder.getOrDefault(order.getId(), ZERO));
         }
 
+        sectionTotals.setPurchaseCount((long) eligibleOrders.size());
         sectionTotals.setDocumentAmount(round(allDocumentAmount));
         sectionTotals.setNetAmount(round(allNetPaid));
         sectionTotals.setOutstandingAmount(round(allDocumentAmount.subtract(allNetPaid)));
@@ -198,9 +199,7 @@ public class SalesReportService {
                         groupMethods.size() == 1 ? groupMethods.iterator().next() : null);
             }
 
-            if (group.getTotals() != null
-                    && grouping != com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT
-                    && grouping != com.opticsappbg.opticsapp.report.model.ReportGrouping.CUSTOMER) {
+            if (group.getTotals() != null) {
                 group.getTotals().setPurchaseCount((long) groupOrderIds.size());
             }
         }
