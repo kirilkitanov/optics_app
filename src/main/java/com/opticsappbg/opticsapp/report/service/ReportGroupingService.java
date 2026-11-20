@@ -56,10 +56,13 @@ public class ReportGroupingService {
                 groupRow.setDocumentType(first.getDocumentType());
                 groupRow.setCustomerId(first.getCustomerId());
                 groupRow.setCustomerName(first.getCustomerName());
+                groupRow.setSupplierName(first.getSupplierName());
                 groupRow.setUsername(first.getUsername());
             } else if (grouping == ReportGrouping.CUSTOMER) {
                 groupRow.setCustomerId(first.getCustomerId());
                 groupRow.setCustomerName(first.getCustomerName());
+            } else if (grouping == ReportGrouping.SUPPLIER) {
+                groupRow.setSupplierName(first.getSupplierName());
             }
 
             result.add(groupRow);
