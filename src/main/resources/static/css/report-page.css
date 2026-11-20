@@ -845,3 +845,47 @@
     min-width: 150px;
     line-height: 1.45;
 }
+
+
+/* Spreadsheet-like report table: clear cell boundaries and highlighted totals */
+.report-results-table {
+    border-collapse: collapse;
+    border: 1px solid #cbd5df;
+}
+
+.report-results-table th,
+.report-results-table td {
+    border: 1px solid #d8e0e8;
+    vertical-align: middle;
+}
+
+.report-results-table th {
+    border-color: #17466f;
+    text-align: left;
+}
+
+.report-results-table td.report-number {
+    text-align: right;
+}
+
+.report-results-table tbody tr.report-total-row {
+    background: #eaf1f7;
+    font-weight: 700;
+}
+
+.report-results-table tbody tr.report-total-row td {
+    border-top: 2px solid #1f4e79;
+    font-weight: 700;
+}
+
+.report-results-table tbody tr.report-total-row:hover {
+    background: #eaf1f7;
+}
+
+.report-results-table tbody tr.report-group-row:nth-child(even) {
+    background: #f8fafc;
+}
+
+.report-results-table tbody tr.report-group-row:hover {
+    background: #eef4f9;
+}
