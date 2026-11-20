@@ -974,3 +974,13 @@
 .report-results-table .report-column-resizer.is-resizing {
     background: rgba(255, 255, 255, 0.35);
 }
+
+
+/* Slightly smaller report table typography */
+.report-results-table {
+    font-size: 9px;
+}
+
+.report-results-table th {
+    font-size: 8.5px;
+}
