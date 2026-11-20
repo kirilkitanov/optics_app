@@ -277,7 +277,7 @@
                                 <td class="report-number"
                                     th:text="${group.totals != null and group.totals.quantity != null ? group.totals.quantity : '—'}"></td>
                                 <td class="report-number" th:if="${section.source.name() == 'SALES' or canViewPurchaseValues}"
-                                    th:text="${group.totals != null and ((section.source.name() == 'DELIVERIES' ? group.totals.deliveryAmount : group.totals.salesAmount) != null ? #numbers.formatDecimal(section.source.name() == 'DELIVERIES' ? group.totals.deliveryAmount : group.totals.salesAmount, 1, 2, 'POINT') : '—')}"></td>
+                                    th:text="${(section.source.name() == 'DELIVERIES' ? group.documentAmount : (group.totals != null ? group.totals.salesAmount : null)) != null ? #numbers.formatDecimal(section.source.name() == 'DELIVERIES' ? group.documentAmount : group.totals.salesAmount, 1, 2, 'POINT') : '—'}"></td>
                                 <td class="report-number" th:if="${canViewPurchaseValues and section.source.name() == 'SALES'}"
                                     th:text="${group.totals != null and group.totals.profit != null ? #numbers.formatDecimal(group.totals.profit, 1, 2, 'POINT') : '—'}"></td>
                                 <td th:if="${filter.primaryGrouping.name() == 'DOCUMENT' and (section.source.name() == 'SALES' or canViewPurchaseValues)}"
