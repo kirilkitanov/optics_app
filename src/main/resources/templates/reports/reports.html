@@ -340,20 +340,20 @@
                             <tr>
                                 <th>№</th>
                                 <th>Дата</th>
-                                <th>Клиент</th>
+                                <th th:text="${section.source.name() == 'DELIVERIES' ? 'Доставчик' : 'Клиент'}"></th>
                                 <th>Документ №</th>
                                 <th>Тип</th>
                                 <th>Бранд / модел</th>
                                 <th>S / C / A / P</th>
-                                <th>Текуща продажна цена</th>
+                                <th th:if="${section.source.name() == 'SALES'}">Текуща продажна цена</th>
                                 <th th:if="${canViewPurchaseValues}">Текуща доставна цена</th>
                                 <th>Текуща наличност</th>
-                                <th>Брой в продажбата</th>
-                                <th>Отстъпка</th>
-                                <th>Продажна цена след отстъпка</th>
-                                <th>Стойност на реда</th>
-                                <th th:if="${canViewPurchaseValues}">Доставна цена при продажба</th>
-                                <th th:if="${canViewPurchaseValues}">Печалба</th>
+                                <th th:text="${section.source.name() == 'DELIVERIES' ? 'Брой в доставката' : 'Брой в продажбата'}"></th>
+                                <th th:if="${section.source.name() == 'SALES'}">Отстъпка</th>
+                                <th th:text="${section.source.name() == 'DELIVERIES' ? 'Доставна цена' : 'Продажна цена след отстъпка'}"></th>
+                                <th th:if="${section.source.name() == 'SALES' or canViewPurchaseValues}">Стойност на реда</th>
+                                <th th:if="${canViewPurchaseValues and section.source.name() == 'SALES'}">Доставна цена при продажба</th>
+                                <th th:if="${canViewPurchaseValues and section.source.name() == 'SALES'}">Печалба</th>
                                 <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Плащания</th>
                                 <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Метод</th>
                                 <th th:if="${filter.primaryGrouping != null and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER')}">Стойност на документите</th>
@@ -371,7 +371,7 @@
                                     <td th:text="${stat.count}"></td>
                                     <td th:text="${row.date != null
                                         ? #temporals.format(row.date, 'dd.MM.yyyy HH:mm') : '—'}"></td>
-                                    <td th:text="${row.customerName != null ? row.customerName : '—'}"></td>
+                                    <td th:text="${section.source.name() == 'DELIVERIES' ? (row.supplierName != null ? row.supplierName : '—') : (row.customerName != null ? row.customerName : '—')}"></td>
                                     <td th:text="${row.documentNumber != null ? row.documentNumber : '—'}"></td>
                                     <td th:text="${row.documentType != null ? row.documentType : '—'}"></td>
                                     <td th:text="${row.productName != null ? row.productName : '—'}"></td>
@@ -380,21 +380,21 @@
                                             + ' C' + #numbers.formatDecimal(row.cyl, 1, 2, 'POINT')
                                             + ' A' + #numbers.formatDecimal(row.addPower, 1, 2, 'POINT')
                                             + ' P' + #numbers.formatDecimal(row.prism, 1, 2, 'POINT')}"></td>
-                                    <td class="report-number"
+                                    <td class="report-number" th:if="${section.source.name() == 'SALES'}"
                                         th:text="${row.currentRetailPrice != null ? #numbers.formatDecimal(row.currentRetailPrice, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number" th:if="${canViewPurchaseValues}"
                                         th:text="${row.currentPurchasePrice != null ? #numbers.formatDecimal(row.currentPurchasePrice, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number" th:text="${row.currentQuantity != null ? row.currentQuantity : '—'}"></td>
                                     <td class="report-number" th:text="${row.quantity != null ? row.quantity : '—'}"></td>
-                                    <td class="report-number"
+                                    <td class="report-number" th:if="${section.source.name() == 'SALES'}"
                                         th:text="${row.discountPercentage != null ? #numbers.formatDecimal(row.discountPercentage, 1, 2, 'POINT') + '%' : '0%'}"></td>
                                     <td class="report-number"
-                                        th:text="${row.salePriceAtSale != null ? #numbers.formatDecimal(row.salePriceAtSale, 1, 2, 'POINT') : '—'}"></td>
-                                    <td class="report-number"
-                                        th:text="${row.salesAmount != null ? #numbers.formatDecimal(row.salesAmount, 1, 2, 'POINT') : '—'}"></td>
-                                    <td class="report-number" th:if="${canViewPurchaseValues}"
+                                        th:text="${(section.source.name() == 'DELIVERIES' ? row.purchasePriceAtSale : row.salePriceAtSale) != null ? #numbers.formatDecimal(section.source.name() == 'DELIVERIES' ? row.purchasePriceAtSale : row.salePriceAtSale, 1, 2, 'POINT') : '—'}"></td>
+                                    <td class="report-number" th:if="${section.source.name() == 'SALES' or canViewPurchaseValues}"
+                                        th:text="${(section.source.name() == 'DELIVERIES' ? row.deliveryAmount : row.salesAmount) != null ? #numbers.formatDecimal(section.source.name() == 'DELIVERIES' ? row.deliveryAmount : row.salesAmount, 1, 2, 'POINT') : '—'}"></td>
+                                    <td class="report-number" th:if="${canViewPurchaseValues and section.source.name() == 'SALES'}"
                                         th:text="${row.purchasePriceAtSale != null ? #numbers.formatDecimal(row.purchasePriceAtSale, 1, 2, 'POINT') : '—'}"></td>
-                                    <td class="report-number" th:if="${canViewPurchaseValues}"
+                                    <td class="report-number" th:if="${canViewPurchaseValues and section.source.name() == 'SALES'}"
                                         th:text="${row.profit != null ? #numbers.formatDecimal(row.profit, 1, 2, 'POINT') : '—'}"></td>
                                     <td th:text="${row.username != null ? row.username : '—'}"></td>
                                 </tr>
