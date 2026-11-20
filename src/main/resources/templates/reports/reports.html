@@ -440,6 +440,7 @@
                                     <strong th:text="${section.totals.quantity != null ? section.totals.quantity : '—'}"></strong>
                                 </td>
                                 <td></td>
+                                <td></td>
                                 <td th:if="${canViewPurchaseValues}"></td>
                                 <td class="report-number" th:if="${canViewPurchaseValues}">
                                     <strong th:text="${section.totals.profit != null ? #numbers.formatDecimal(section.totals.profit, 1, 2, 'POINT') : '—'}"></strong>
