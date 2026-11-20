@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="bg" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нова складова ревизия</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<div class="app-wrapper">
+
+    <div th:replace="~{header :: header-fragment}"></div>
+
+    <div class="main-container">
+
+        <div th:replace="~{sidebar :: sidebar-fragment}"></div>
+
+        <section class="content">
+
+            <div class="content-header">
+                <div class="orders-title-search">
+                    <h1 class="page-title-blue">Нова складова ревизия</h1>
+                </div>
+
+                <a th:href="@{/stocktakes}" class="btn-new-order">
+                    Назад
+                </a>
+            </div>
+
+            <div class="product-toolbar">
+
+                <input type="text"
+                       id="productSearch"
+                       placeholder="Търси продукт..."
+                       autocomplete="off">
+
+                <select id="categoryFilter">
+                    <option value="">Всички категории</option>
+                </select>
+
+                <select id="brandFilter">
+                    <option value="">Всички брандове</option>
+                </select>
+
+                <input type="text"
+                       id="modelFilter"
+                       placeholder="Модел">
+
+                <input type="text"
+                       id="sphFilter"
+                       placeholder="SPH">
+
+                <input type="text"
+                       id="cylFilter"
+                       placeholder="CYL">
+
+                <input type="text"
+                       id="addFilter"
+                       placeholder="ADD">
+
+                <select id="stockFilter">
+                    <option value="all">Всички наличности</option>
+                    <option value="non-zero">Различни от 0</option>
+                    <option value="in-stock">Налични</option>
+                    <option value="zero-stock">С нулева наличност</option>
+                    <option value="negative-stock">Отрицателна наличност</option>
+                </select>
+
+            </div>
+
+            <div style="margin: 15px 0; font-weight: bold;">
+                Избрани са <span id="selectedProductCount">0</span> продукта
+            </div>
+
+            <div class="table-container orders-table">
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Категория</th>
+                        <th>Бранд</th>
+                        <th>Модел</th>
+                        <th>Баркод</th>
+                        <th>Размер / Диаметър</th>
+                        <th>SPH</th>
+                        <th>CYL</th>
+                        <th>ADD</th>
+                        <th>Наличност</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="stocktakeProductsBody">
+
+                    <tr th:each="product : ${products}"
+                        class="stocktake-product-row"
+                        th:attr="data-product-id=${product.id}">
+
+                        <td th:text="${product.category.displayName}"></td>
+                        <td th:text="${product.brand}"></td>
+                        <td th:text="${product.model}"></td>
+                        <td th:text="${product.barcode}"></td>
+                        <td th:text="${product.sizeOrDiameter}"></td>
+                        <td th:text="${product.sph}"></td>
+                        <td th:text="${product.cyl}"></td>
+                        <td th:text="${product.addPower}"></td>
+                        <td th:text="${product.quantity}"></td>
+
+                    </tr>
+
+                    <tr id="noStocktakeResults" style="display: none;">
+                        <td colspan="9" class="empty-table-message">
+                            Няма продукти, отговарящи на избраните филтри.
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+
+            <form th:action="@{/stocktakes}"
+                  method="post"
+                  id="createStocktakeForm"
+                  style="margin-top: 20px;">
+
+                <div id="stocktakeProductIds"></div>
+
+                <button type="submit"
+                        class="btn-new-order"
+                        id="createStocktakeButton">
+                    Създай ревизия
+                </button>
+
+            </form>
+
+        </section>
+
+    </div>
+</div>
+
+<script th:src="@{/js/product-filters.js}"></script>
+
+<script th:inline="javascript">
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const products = /*[[${products}]]*/ [];
+
+        const productSearch = document.getElementById('productSearch');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const brandFilter = document.getElementById('brandFilter');
+        const modelFilter = document.getElementById('modelFilter');
+        const sphFilter = document.getElementById('sphFilter');
+        const cylFilter = document.getElementById('cylFilter');
+        const addFilter = document.getElementById('addFilter');
+        const stockFilter = document.getElementById('stockFilter');
+
+        const productRows = Array.from(
+            document.querySelectorAll('.stocktake-product-row')
+        );
+
+        const selectedProductCount =
+            document.getElementById('selectedProductCount');
+
+        const noResultsRow =
+            document.getElementById('noStocktakeResults');
+
+        let currentlyFilteredProducts = products;
+
+        const createStocktakeForm =
+            document.getElementById('createStocktakeForm');
+
+        const stocktakeProductIds =
+            document.getElementById('stocktakeProductIds');
+
+        createStocktakeForm.addEventListener('submit', function (event) {
+
+            stocktakeProductIds.innerHTML = '';
+
+            if (currentlyFilteredProducts.length === 0) {
+                event.preventDefault();
+                alert('Няма избрани продукти за ревизията.');
+                return;
+            }
+
+            currentlyFilteredProducts.forEach(function (product) {
+
+                const input = document.createElement('input');
+
+                input.type = 'hidden';
+                input.name = 'productIds';
+                input.value = product.id;
+
+                stocktakeProductIds.appendChild(input);
+            });
+        });
+
+        createProductFilters({
+            products: products,
+
+            elements: {
+                productSearch,
+                categoryFilter,
+                brandFilter,
+                modelFilter,
+                sphFilter,
+                cylFilter,
+                addFilter,
+                stockFilter
+            },
+
+            onChange: function (filteredProducts) {
+
+                currentlyFilteredProducts = filteredProducts;
+
+                const filteredIds = new Set(
+                    filteredProducts.map(product => String(product.id))
+                );
+
+                productRows.forEach(function (row) {
+                    const productId = row.dataset.productId;
+
+                    row.style.display = filteredIds.has(productId)
+                        ? ''
+                        : 'none';
+                });
+
+                selectedProductCount.textContent =
+                    filteredProducts.length;
+
+                noResultsRow.style.display =
+                    filteredProducts.length === 0 ? '' : 'none';
+            }
+        });
+
+    });
+
+</script>
+
+</body>
+</html>
