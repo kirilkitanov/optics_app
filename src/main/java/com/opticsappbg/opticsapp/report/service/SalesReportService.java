@@ -95,16 +95,19 @@ public class SalesReportService {
                 filter.getSortDirection()
         );
 
-        List<ReportRow> groupedRows = groupingService.group(
-                rows,
-                filter.getPrimaryGrouping()
-        );
+        com.opticsappbg.opticsapp.report.model.ReportGrouping grouping =
+                filter.getPrimaryGrouping() == com.opticsappbg.opticsapp.report.model.ReportGrouping.SUPPLIER
+                        ? com.opticsappbg.opticsapp.report.model.ReportGrouping.CUSTOMER
+                        : filter.getPrimaryGrouping();
+
+        List<ReportRow> groupedRows = groupingService.group(rows, grouping);
 
         com.opticsappbg.opticsapp.report.model.ReportGrouping grouping =
                 filter.getPrimaryGrouping();
 
         if (grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT
                 || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.CUSTOMER
+                || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.SUPPLIER
                 || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.DAY
                 || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.WEEK
                 || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.MONTH
