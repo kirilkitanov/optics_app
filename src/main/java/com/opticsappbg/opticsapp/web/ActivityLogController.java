@@ -1,4 +1,4 @@
-package com.opticsappbg.opticsapp.activity.web;
+package com.opticsappbg.opticsapp.web;
 
 import com.opticsappbg.opticsapp.activity.model.ActivityAction;
 import com.opticsappbg.opticsapp.activity.service.ActivityLogService;
