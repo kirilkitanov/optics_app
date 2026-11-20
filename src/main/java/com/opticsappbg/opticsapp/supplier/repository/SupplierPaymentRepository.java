@@ -9,5 +9,7 @@ public interface SupplierPaymentRepository extends JpaRepository<SupplierPayment
 
     List<SupplierPayment> findByDelivery_IdOrderByPaymentDateDesc(Long deliveryId);
 
+    List<SupplierPayment> findByDelivery_IdInOrderByPaymentDateAsc(List<Long> deliveryIds);
+
     List<SupplierPayment> findBySupplier_IdOrderByPaymentDateDesc(Long supplierId);
 }
