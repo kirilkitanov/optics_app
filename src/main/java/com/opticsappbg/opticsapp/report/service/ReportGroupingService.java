@@ -81,7 +81,7 @@ public class ReportGroupingService {
                     : YearMonth.from(row.getDate()).toString();
             case YEAR -> row.getDate() == null ? "UNKNOWN"
                     : String.valueOf(row.getDate().getYear());
-            case PRODUCT -> row.getProductId() == null ? "NO_PRODUCT" : value(row.getProductId());
+            case PRODUCT -> productGroupKey(row);
             case CATEGORY -> hasValue(row.getCategoryName()) ? value(row.getCategoryName()) : "NO_CATEGORY";
             case CUSTOMER -> row.getCustomerId() == null ? "NO_CUSTOMER" : value(row.getCustomerId());
             case SUPPLIER -> hasValue(row.getSupplierName()) ? value(row.getSupplierName()) : "NO_SUPPLIER";
@@ -102,13 +102,57 @@ public class ReportGroupingService {
                     : row.getDate().format(MONTH_FORMAT);
             case YEAR -> row.getDate() == null ? "Без дата"
                     : String.valueOf(row.getDate().getYear());
-            case PRODUCT -> hasValue(row.getProductName()) ? value(row.getProductName()) : "Без продукт";
+            case PRODUCT -> productGroupLabel(row);
             case CATEGORY -> hasValue(row.getCategoryName()) ? value(row.getCategoryName()) : "Без категория";
             case CUSTOMER -> hasValue(row.getCustomerName()) ? value(row.getCustomerName()) : "Без клиент";
             case SUPPLIER -> hasValue(row.getSupplierName()) ? value(row.getSupplierName()) : "Без доставчик";
             case USER -> hasValue(row.getUsername()) ? value(row.getUsername()) : "Без потребител";
             case NONE -> "";
         };
+    }
+
+
+    private String productGroupKey(ReportRow row) {
+        return String.join("|",
+                normalizeKey(row.getCategoryName()),
+                normalizeKey(row.getProductName()),
+                isOpticalProduct(row) ? normalizeDecimal(row.getSph()) : "",
+                isOpticalProduct(row) ? normalizeDecimal(row.getCyl()) : "",
+                isOpticalProduct(row) ? normalizeDecimal(row.getAddPower()) : "",
+                isOpticalProduct(row) ? normalizeDecimal(row.getPrism()) : "");
+    }
+
+    private String productGroupLabel(ReportRow row) {
+        String category = hasValue(row.getCategoryName())
+                ? value(row.getCategoryName()) : "Без категория";
+        String product = hasValue(row.getProductName())
+                ? value(row.getProductName()) : "Без продукт";
+        String label = category + " | " + product;
+
+        if (isOpticalProduct(row)) {
+            label += " | S" + displayDecimal(row.getSph())
+                    + " C" + displayDecimal(row.getCyl())
+                    + " A" + displayDecimal(row.getAddPower())
+                    + " P" + displayDecimal(row.getPrism());
+        }
+        return label;
+    }
+
+    private boolean isOpticalProduct(ReportRow row) {
+        return "Диоптрично стъкло".equals(row.getCategoryName())
+                || "Контактна леща".equals(row.getCategoryName());
+    }
+
+    private String normalizeKey(String value) {
+        return value == null ? "" : value.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    private String normalizeDecimal(BigDecimal value) {
+        return value == null ? "" : value.stripTrailingZeros().toPlainString();
+    }
+
+    private String displayDecimal(BigDecimal value) {
+        return value == null ? "—" : value.stripTrailingZeros().toPlainString();
     }
 
     private String weekKey(ReportRow row) {
