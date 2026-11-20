@@ -194,7 +194,9 @@ public class DeliveryReportService {
         row.setProductName(buildProductName(product));
         row.setCategoryName(product.getCategory() == null
                 ? null : product.getCategory().getDisplayName());
-        row.setQuantity(item.getQuantity() == null ? 0L : item.getQuantity().longValue());
+        long quantity = item.getQuantity() == null ? 0L : item.getQuantity().longValue();
+        row.setQuantity(delivery.getDocumentType() == DeliveryDocumentType.CREDIT_NOTE
+                ? -quantity : quantity);
         row.setPurchaseCount(firstOccurrenceOfProduct ? 1L : 0L);
         row.setSph(product.getSph());
         row.setCyl(product.getCyl());
