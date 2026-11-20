@@ -976,11 +976,11 @@
 }
 
 
-/* Slightly smaller report table typography */
+/* Compact report table typography with a slightly larger header */
 .report-results-table {
-    font-size: 9px;
+    font-size: 8.5px;
 }
 
 .report-results-table th {
-    font-size: 8.5px;
+    font-size: 9.5px;
 }
