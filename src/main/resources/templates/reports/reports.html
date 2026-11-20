@@ -237,9 +237,9 @@
                                 <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT'}">Документ №</th>
                                 <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT'}">Тип</th>
                                 <th th:if="${filter.primaryGrouping.name() != 'DOCUMENT' and filter.primaryGrouping.name() != 'CUSTOMER'}">Група</th>
-                                <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'DAY'
-                                            or filter.primaryGrouping.name() == 'WEEK' or filter.primaryGrouping.name() == 'MONTH'
-                                            or filter.primaryGrouping.name() == 'YEAR' or filter.primaryGrouping.name() == 'CUSTOMER'}">Брой документи</th>
+                                <th th:if="${filter.primaryGrouping.name() == 'DAY' or filter.primaryGrouping.name() == 'WEEK'
+                                            or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR'
+                                            or filter.primaryGrouping.name() == 'CUSTOMER'}">Брой документи</th>
                                 <th>Бройки</th>
                                 <th>Продажна стойност</th>
                                 <th th:if="${canViewPurchaseValues}">Печалба</th>
@@ -268,9 +268,9 @@
                                 <td th:if="${filter.primaryGrouping.name() != 'DOCUMENT' and filter.primaryGrouping.name() != 'CUSTOMER'}"
                                     th:text="${group.groupLabel != null ? group.groupLabel : '—'}"></td>
                                 <td class="report-number"
-                                    th:if="${filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER'
-                                            or filter.primaryGrouping.name() == 'DAY' or filter.primaryGrouping.name() == 'WEEK'
-                                            or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR'}"
+                                    th:if="${filter.primaryGrouping.name() == 'CUSTOMER' or filter.primaryGrouping.name() == 'DAY'
+                                            or filter.primaryGrouping.name() == 'WEEK' or filter.primaryGrouping.name() == 'MONTH'
+                                            or filter.primaryGrouping.name() == 'YEAR'}"
                                     th:text="${group.totals != null and group.totals.purchaseCount != null ? group.totals.purchaseCount : '—'}"></td>
                                 <td class="report-number"
                                     th:text="${group.totals != null and group.totals.quantity != null ? group.totals.quantity : '—'}"></td>
@@ -301,9 +301,9 @@
                                 <td th:if="${filter.primaryGrouping.name() == 'CUSTOMER'}"><strong>Общо</strong></td>
                                 <td th:if="${filter.primaryGrouping.name() != 'DOCUMENT' and filter.primaryGrouping.name() != 'CUSTOMER'}"><strong>Общо</strong></td>
                                 <td class="report-number"
-                                    th:if="${filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER'
-                                            or filter.primaryGrouping.name() == 'DAY' or filter.primaryGrouping.name() == 'WEEK'
-                                            or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR'}"
+                                    th:if="${filter.primaryGrouping.name() == 'CUSTOMER' or filter.primaryGrouping.name() == 'DAY'
+                                            or filter.primaryGrouping.name() == 'WEEK' or filter.primaryGrouping.name() == 'MONTH'
+                                            or filter.primaryGrouping.name() == 'YEAR'}"
                                     th:text="${section.totals.purchaseCount != null ? section.totals.purchaseCount : '—'}"></td>
                                 <td class="report-number"
                                     th:text="${section.totals.quantity != null ? section.totals.quantity : '—'}"></td>
