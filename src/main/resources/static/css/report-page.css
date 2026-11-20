@@ -889,3 +889,11 @@
 .report-results-table tbody tr.report-group-row:hover {
     background: #eef4f9;
 }
+
+
+/* Report tables: keep every heading and value aligned to the left. */
+.report-results-table th,
+.report-results-table td,
+.report-results-table td.report-number {
+    text-align: left;
+}
