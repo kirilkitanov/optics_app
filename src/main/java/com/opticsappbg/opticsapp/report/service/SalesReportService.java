@@ -102,9 +102,6 @@ public class SalesReportService {
 
         List<ReportRow> groupedRows = groupingService.group(rows, grouping);
 
-        com.opticsappbg.opticsapp.report.model.ReportGrouping grouping =
-                filter.getPrimaryGrouping();
-
         if (grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT
                 || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.CUSTOMER
                 || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.SUPPLIER
