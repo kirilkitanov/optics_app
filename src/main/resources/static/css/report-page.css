@@ -897,3 +897,38 @@
 .report-results-table td.report-number {
     text-align: left;
 }
+
+
+/* Compact report tables to reduce horizontal scrolling without hiding data. */
+.report-results-table {
+    width: 100%;
+    min-width: 1200px;
+    table-layout: auto;
+    font-size: 10px;
+    white-space: normal;
+}
+
+.report-results-table th,
+.report-results-table td {
+    padding: 4px 5px;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+}
+
+.report-results-table th {
+    white-space: normal;
+    vertical-align: middle;
+}
+
+.report-results-table td.report-number {
+    white-space: nowrap;
+}
+
+.report-results-table .report-optical-values {
+    white-space: nowrap;
+}
+
+.report-results-table .report-payment-summary {
+    min-width: 105px;
+    white-space: pre-line;
+}
