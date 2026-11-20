@@ -225,7 +225,7 @@
                     <h3 th:text="${section.title}"></h3>
 
                     <div class="table-container orders-table"
-                         th:if="${section.source != null and section.source.name() == 'SALES'
+                         th:if="${section.source != null and (section.source.name() == 'SALES' or section.source.name() == 'DELIVERIES')
                                 and filter.primaryGrouping != null
                                 and filter.primaryGrouping.name() != 'NONE'}">
                         <table class="report-results-table">
