@@ -31,6 +31,7 @@ import java.util.Map;
 public class ReportService {
 
     private final SalesReportService salesReportService;
+    private final DeliveryReportService deliveryReportService;
     private final CustomerRepository customerRepository;
     private final SupplierRepository supplierRepository;
     private final ProductRepository productRepository;
@@ -46,12 +47,15 @@ public class ReportService {
 
         if (filter.getSources() != null
                 && filter.getSources().contains(ReportSource.SALES)) {
-
             result.getSections().add(
-                    salesReportService.generate(
-                            filter,
-                            canViewPurchaseValues
-                    )
+                    salesReportService.generate(filter, canViewPurchaseValues)
+            );
+        }
+
+        if (filter.getSources() != null
+                && filter.getSources().contains(ReportSource.DELIVERIES)) {
+            result.getSections().add(
+                    deliveryReportService.generate(filter, canViewPurchaseValues)
             );
         }
 
