@@ -242,16 +242,17 @@
                                             or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR'
                                             or filter.primaryGrouping.name() == 'CUSTOMER' or filter.primaryGrouping.name() == 'SUPPLIER'}">Брой документи</th>
                                 <th>Бройки</th>
-                                <th th:text="${section.source.name() == 'DELIVERIES' ? 'Доставна стойност' : 'Продажна стойност'}"></th>
+                                <th th:if="${section.source.name() == 'SALES' or canViewPurchaseValues}"
+                                    th:text="${section.source.name() == 'DELIVERIES' ? 'Доставна стойност' : 'Продажна стойност'}"></th>
                                 <th th:if="${canViewPurchaseValues and section.source.name() == 'SALES'}">Печалба</th>
-                                <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT'}">Метод</th>
-                                <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER'
+                                <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT' and (section.source.name() == 'SALES' or canViewPurchaseValues)}">Метод</th>
+                                <th th:if="${(section.source.name() == 'SALES' or canViewPurchaseValues) and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER'
                                             or filter.primaryGrouping.name() == 'SUPPLIER' or filter.primaryGrouping.name() == 'DAY' or filter.primaryGrouping.name() == 'WEEK'
-                                            or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR'}">Нетно платено</th>
-                                <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER'
+                                            or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR')}">Нетно платено</th>
+                                <th th:if="${(section.source.name() == 'SALES' or canViewPurchaseValues) and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER'
                                             or filter.primaryGrouping.name() == 'SUPPLIER' or filter.primaryGrouping.name() == 'DAY' or filter.primaryGrouping.name() == 'WEEK'
-                                            or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR'}">Остатък</th>
-                                <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT'}">Статус</th>
+                                            or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR')}">Остатък</th>
+                                <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT' and (section.source.name() == 'SALES' or canViewPurchaseValues)}">Статус</th>
                                 <th th:if="${filter.primaryGrouping.name() == 'DOCUMENT'}">Потребител</th>
                             </tr>
                             </thead>
@@ -269,17 +270,17 @@
                                 <td th:if="${filter.primaryGrouping.name() != 'DOCUMENT' and filter.primaryGrouping.name() != 'CUSTOMER'}"
                                     th:text="${group.groupLabel != null ? group.groupLabel : '—'}"></td>
                                 <td class="report-number"
-                                    th:if="${filter.primaryGrouping.name() == 'CUSTOMER' or filter.primaryGrouping.name() == 'DAY'
+                                    th:if="${filter.primaryGrouping.name() == 'CUSTOMER' or filter.primaryGrouping.name() == 'SUPPLIER' or filter.primaryGrouping.name() == 'DAY'
                                             or filter.primaryGrouping.name() == 'WEEK' or filter.primaryGrouping.name() == 'MONTH'
                                             or filter.primaryGrouping.name() == 'YEAR'}"
                                     th:text="${group.totals != null and group.totals.purchaseCount != null ? group.totals.purchaseCount : '—'}"></td>
                                 <td class="report-number"
                                     th:text="${group.totals != null and group.totals.quantity != null ? group.totals.quantity : '—'}"></td>
-                                <td class="report-number"
+                                <td class="report-number" th:if="${section.source.name() == 'SALES' or canViewPurchaseValues}"
                                     th:text="${group.totals != null and ((section.source.name() == 'DELIVERIES' ? group.totals.deliveryAmount : group.totals.salesAmount) != null ? #numbers.formatDecimal(section.source.name() == 'DELIVERIES' ? group.totals.deliveryAmount : group.totals.salesAmount, 1, 2, 'POINT') : '—')}"></td>
                                 <td class="report-number" th:if="${canViewPurchaseValues and section.source.name() == 'SALES'}"
                                     th:text="${group.totals != null and group.totals.profit != null ? #numbers.formatDecimal(group.totals.profit, 1, 2, 'POINT') : '—'}"></td>
-                                <td th:if="${filter.primaryGrouping.name() == 'DOCUMENT'}"
+                                <td th:if="${filter.primaryGrouping.name() == 'DOCUMENT' and (section.source.name() == 'SALES' or canViewPurchaseValues)}"
                                     th:text="${group.paymentMethodsSummary != null ? group.paymentMethodsSummary : '—'}"></td>
                                 <td class="report-number"
                                     th:if="${filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER'
@@ -287,11 +288,11 @@
                                             or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR'}"
                                     th:text="${group.netAmount != null ? #numbers.formatDecimal(group.netAmount, 1, 2, 'POINT') : '—'}"></td>
                                 <td class="report-number"
-                                    th:if="${filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER'
-                                            or filter.primaryGrouping.name() == 'DAY' or filter.primaryGrouping.name() == 'WEEK'
-                                            or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR'}"
+                                    th:if="${(section.source.name() == 'SALES' or canViewPurchaseValues) and (filter.primaryGrouping.name() == 'DOCUMENT' or filter.primaryGrouping.name() == 'CUSTOMER'
+                                            or filter.primaryGrouping.name() == 'SUPPLIER' or filter.primaryGrouping.name() == 'DAY' or filter.primaryGrouping.name() == 'WEEK'
+                                            or filter.primaryGrouping.name() == 'MONTH' or filter.primaryGrouping.name() == 'YEAR')}"
                                     th:text="${group.outstandingAmount != null ? #numbers.formatDecimal(group.outstandingAmount, 1, 2, 'POINT') : '—'}"></td>
-                                <td th:if="${filter.primaryGrouping.name() == 'DOCUMENT'}"
+                                <td th:if="${filter.primaryGrouping.name() == 'DOCUMENT' and (section.source.name() == 'SALES' or canViewPurchaseValues)}"
                                     th:text="${group.paymentStatus != null ? group.paymentStatus : '—'}"></td>
                                 <td th:if="${filter.primaryGrouping.name() == 'DOCUMENT'}"
                                     th:text="${group.username != null ? group.username : '—'}"></td>
@@ -308,7 +309,7 @@
                                     th:text="${section.totals.purchaseCount != null ? section.totals.purchaseCount : '—'}"></td>
                                 <td class="report-number"
                                     th:text="${section.totals.quantity != null ? section.totals.quantity : '—'}"></td>
-                                <td class="report-number"
+                                <td class="report-number" th:if="${section.source.name() == 'SALES' or canViewPurchaseValues}"
                                     th:text="${((section.source.name() == 'DELIVERIES' ? section.totals.deliveryAmount : section.totals.salesAmount) != null ? #numbers.formatDecimal(section.source.name() == 'DELIVERIES' ? section.totals.deliveryAmount : section.totals.salesAmount, 1, 2, 'POINT') : '—')}"></td>
                                 <td class="report-number" th:if="${canViewPurchaseValues and section.source.name() == 'SALES'}"
                                     th:text="${section.totals.profit != null ? #numbers.formatDecimal(section.totals.profit, 1, 2, 'POINT') : '—'}"></td>
