@@ -358,7 +358,10 @@ public class SalesReportService {
         row.setCurrentQuantity(product.getQuantity() != null
                 ? product.getQuantity().longValue()
                 : 0L);
-        row.setSalePriceAtSale(item.getSalePriceAtSale());
+        row.setDiscountPercentage(order.getDiscountPercentage());
+        row.setSalePriceAtSale(item.getQuantity() != null && item.getQuantity() > 0
+                ? salesAmount.divide(BigDecimal.valueOf(item.getQuantity()), SCALE, RoundingMode.HALF_UP)
+                : ZERO);
 
         row.setPurchaseCount(firstPurchaseOfProduct ? 1L : 0L);
         row.setSalesAmount(salesAmount);
