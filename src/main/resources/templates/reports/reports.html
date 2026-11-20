@@ -377,10 +377,12 @@
                                     <td th:text="${row.documentType != null ? row.documentType : '—'}"></td>
                                     <td th:text="${row.productName != null ? row.productName : '—'}"></td>
                                     <td class="report-optical-values"
-                                        th:text="${'S' + #numbers.formatDecimal(row.sph, 1, 2, 'POINT')
-                                            + ' C' + #numbers.formatDecimal(row.cyl, 1, 2, 'POINT')
-                                            + ' A' + #numbers.formatDecimal(row.addPower, 1, 2, 'POINT')
-                                            + ' P' + #numbers.formatDecimal(row.prism, 1, 2, 'POINT')}"></td>
+                                        th:text="${row.categoryName == 'Диоптрично стъкло' or row.categoryName == 'Контактна леща'
+                                            ? 'S' + (row.sph != null ? #numbers.formatDecimal(row.sph, 1, 2, 'POINT') : '—')
+                                                + ' C' + (row.cyl != null ? #numbers.formatDecimal(row.cyl, 1, 2, 'POINT') : '—')
+                                                + ' A' + (row.addPower != null ? #numbers.formatDecimal(row.addPower, 1, 2, 'POINT') : '—')
+                                                + ' P' + (row.prism != null ? #numbers.formatDecimal(row.prism, 1, 2, 'POINT') : '—')
+                                            : '—'}"></td>
                                     <td class="report-number" th:if="${section.source.name() == 'SALES'}"
                                         th:text="${row.currentRetailPrice != null ? #numbers.formatDecimal(row.currentRetailPrice, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number" th:if="${canViewPurchaseValues}"
