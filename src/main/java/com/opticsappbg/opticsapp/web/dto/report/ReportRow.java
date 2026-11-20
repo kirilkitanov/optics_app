@@ -48,6 +48,7 @@ public class ReportRow {
     private Long currentQuantity;
 
     private BigDecimal salePriceAtSale;
+    private BigDecimal discountPercentage;
     private BigDecimal purchasePriceAtSale;
 
     private BigDecimal salesAmount;
