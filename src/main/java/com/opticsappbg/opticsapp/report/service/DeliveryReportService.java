@@ -89,6 +89,7 @@ public class DeliveryReportService {
             }
 
             boolean hasMatchingItem = false;
+            Set<Long> countedProducts = new HashSet<>();
             for (DeliveryItem item : delivery.getItems()) {
                 Product product = item.getProduct();
                 if (!matchesProductFilters(product, filter)) {
@@ -96,7 +97,10 @@ public class DeliveryReportService {
                 }
 
                 hasMatchingItem = true;
-                ReportRow row = createRow(delivery, item, product, canViewPurchaseValues);
+                ReportRow row = createRow(
+                        delivery, item, product,
+                        countedProducts.add(product.getId()), canViewPurchaseValues
+                );
                 rows.add(row);
                 addToTotals(totals, row, canViewPurchaseValues);
             }
@@ -170,6 +174,7 @@ public class DeliveryReportService {
             Delivery delivery,
             DeliveryItem item,
             Product product,
+            boolean firstOccurrenceOfProduct,
             boolean canViewPurchaseValues
     ) {
         ReportRow row = new ReportRow();
@@ -188,6 +193,12 @@ public class DeliveryReportService {
         row.setCategoryName(product.getCategory() == null
                 ? null : product.getCategory().getDisplayName());
         row.setQuantity(item.getQuantity() == null ? 0L : item.getQuantity().longValue());
+        row.setPurchaseCount(firstOccurrenceOfProduct ? 1L : 0L);
+        row.setSph(product.getSph());
+        row.setCyl(product.getCyl());
+        row.setAddPower(product.getAddPower());
+        row.setPrism(product.getPrism());
+        row.setCurrentQuantity(product.getQuantity() == null ? 0L : product.getQuantity().longValue());
 
         BigDecimal lineAmount = item.getPurchasePriceAtDelivery() == null
                 ? ZERO
