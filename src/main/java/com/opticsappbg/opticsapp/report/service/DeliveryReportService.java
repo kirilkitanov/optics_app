@@ -114,6 +114,9 @@ public class DeliveryReportService {
         sortingService.sort(rows, filter.getSortBy(), filter.getSortDirection());
 
         ReportGrouping grouping = filter.getPrimaryGrouping();
+        if (grouping == ReportGrouping.CUSTOMER) {
+            grouping = ReportGrouping.SUPPLIER;
+        }
         List<ReportRow> groupedRows = groupingService.group(rows, grouping);
 
         if (grouping == ReportGrouping.DOCUMENT
