@@ -78,11 +78,11 @@ public class ReportGroupingService {
                     : YearMonth.from(row.getDate()).toString();
             case YEAR -> row.getDate() == null ? "UNKNOWN"
                     : String.valueOf(row.getDate().getYear());
-            case PRODUCT -> value(row.getProductId());
-            case CATEGORY -> value(row.getCategoryName());
-            case CUSTOMER -> value(row.getCustomerId());
-            case SUPPLIER -> value(row.getSupplierName());
-            case USER -> value(row.getUsername());
+            case PRODUCT -> row.getProductId() == null ? "NO_PRODUCT" : value(row.getProductId());
+            case CATEGORY -> hasValue(row.getCategoryName()) ? value(row.getCategoryName()) : "NO_CATEGORY";
+            case CUSTOMER -> row.getCustomerId() == null ? "NO_CUSTOMER" : value(row.getCustomerId());
+            case SUPPLIER -> hasValue(row.getSupplierName()) ? value(row.getSupplierName()) : "NO_SUPPLIER";
+            case USER -> hasValue(row.getUsername()) ? value(row.getUsername()) : "NO_USER";
             case NONE -> "";
         };
     }
@@ -99,11 +99,11 @@ public class ReportGroupingService {
                     : row.getDate().format(MONTH_FORMAT);
             case YEAR -> row.getDate() == null ? "Без дата"
                     : String.valueOf(row.getDate().getYear());
-            case PRODUCT -> value(row.getProductName());
-            case CATEGORY -> value(row.getCategoryName());
-            case CUSTOMER -> value(row.getCustomerName());
-            case SUPPLIER -> value(row.getSupplierName());
-            case USER -> value(row.getUsername());
+            case PRODUCT -> hasValue(row.getProductName()) ? value(row.getProductName()) : "Без продукт";
+            case CATEGORY -> hasValue(row.getCategoryName()) ? value(row.getCategoryName()) : "Без категория";
+            case CUSTOMER -> hasValue(row.getCustomerName()) ? value(row.getCustomerName()) : "Без клиент";
+            case SUPPLIER -> hasValue(row.getSupplierName()) ? value(row.getSupplierName()) : "Без доставчик";
+            case USER -> hasValue(row.getUsername()) ? value(row.getUsername()) : "Без потребител";
             case NONE -> "";
         };
     }
@@ -155,6 +155,10 @@ public class ReportGroupingService {
     private BigDecimal add(BigDecimal first, BigDecimal second) {
         if (first == null && second == null) return null;
         return (first == null ? ZERO : first).add(second == null ? ZERO : second);
+    }
+
+    private boolean hasValue(String value) {
+        return value != null && !value.isBlank();
     }
 
     private String value(Object value) {
