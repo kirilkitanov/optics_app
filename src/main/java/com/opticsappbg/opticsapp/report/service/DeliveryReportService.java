@@ -354,6 +354,7 @@ public class DeliveryReportService {
 
     private void addToTotals(ReportTotals totals, ReportRow row, boolean canViewPurchaseValues) {
         totals.setQuantity(add(totals.getQuantity(), row.getQuantity()));
+        totals.setPurchaseCount(add(totals.getPurchaseCount(), row.getPurchaseCount()));
         totals.setDeliveryAmount(add(totals.getDeliveryAmount(), row.getDeliveryAmount()));
         if (canViewPurchaseValues && row.getPurchaseValue() != null) {
             totals.setPurchaseValue(add(totals.getPurchaseValue(), row.getPurchaseValue()));
