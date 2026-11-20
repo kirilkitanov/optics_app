@@ -932,3 +932,45 @@
     min-width: 105px;
     white-space: pre-line;
 }
+
+
+/* Keep report cell content on one line; users can widen columns when needed. */
+.report-results-table {
+    width: max-content;
+    min-width: 100%;
+    table-layout: fixed;
+    white-space: nowrap;
+    font-size: 10px;
+}
+
+.report-results-table th,
+.report-results-table td,
+.report-results-table td.report-number {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: normal;
+    text-align: left;
+}
+
+.report-results-table th {
+    position: relative;
+    padding-right: 12px;
+}
+
+.report-results-table .report-column-resizer {
+    position: absolute;
+    top: 0;
+    right: -2px;
+    width: 7px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+    touch-action: none;
+    z-index: 3;
+}
+
+.report-results-table .report-column-resizer:hover,
+.report-results-table .report-column-resizer.is-resizing {
+    background: rgba(255, 255, 255, 0.35);
+}
