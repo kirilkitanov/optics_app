@@ -347,7 +347,8 @@
                                 <th th:if="${canViewPurchaseValues}">Текуща доставна цена</th>
                                 <th>Текуща наличност</th>
                                 <th>Брой в продажбата</th>
-                                <th>Продажна цена при продажба</th>
+                                <th>Отстъпка</th>
+                                <th>Продажна цена след отстъпка</th>
                                 <th th:if="${canViewPurchaseValues}">Доставна цена при продажба</th>
                                 <th th:if="${canViewPurchaseValues}">Печалба</th>
                                 <th th:if="${filter.primaryGrouping != null and filter.primaryGrouping.name() == 'DOCUMENT'}">Плащания</th>
@@ -382,6 +383,8 @@
                                         th:text="${row.currentPurchasePrice != null ? #numbers.formatDecimal(row.currentPurchasePrice, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number" th:text="${row.currentQuantity != null ? row.currentQuantity : '—'}"></td>
                                     <td class="report-number" th:text="${row.quantity != null ? row.quantity : '—'}"></td>
+                                    <td class="report-number"
+                                        th:text="${row.discountPercentage != null ? #numbers.formatDecimal(row.discountPercentage, 1, 2, 'POINT') + '%' : '0%'}"></td>
                                     <td class="report-number"
                                         th:text="${row.salePriceAtSale != null ? #numbers.formatDecimal(row.salePriceAtSale, 1, 2, 'POINT') : '—'}"></td>
                                     <td class="report-number" th:if="${canViewPurchaseValues}"
