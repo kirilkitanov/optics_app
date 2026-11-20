@@ -14,25 +14,20 @@ import com.opticsappbg.opticsapp.web.dto.report.ReportFilter;
 import com.opticsappbg.opticsapp.web.dto.report.ReportRow;
 import com.opticsappbg.opticsapp.web.dto.report.ReportSection;
 import com.opticsappbg.opticsapp.web.dto.report.ReportTotals;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
 public class SalesReportService {
 
-    private static final Logger log = LoggerFactory.getLogger(SalesReportService.class);
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final int SCALE = 2;
-    private static final DateTimeFormatter PAYMENT_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     private final OrderRepository orderRepository;
     private final CustomerPaymentRepository customerPaymentRepository;
@@ -62,40 +57,19 @@ public class SalesReportService {
         Set<ReportMetric> metrics = resolveMetrics(filter, canViewPurchaseValues);
         section.setColumns(new ArrayList<>(metrics));
 
-        log.info("[REPORT-DIAG] Incoming filters: fromDate={}, toDate={}, grouping={}, sortBy={}, sortDirection={}, sources={}, productIds={}, categories={}, brand={}, model={}, barcode={}, customerId={}, userId={}",
-                filter.getFromDate(), filter.getToDate(), filter.getPrimaryGrouping(),
-                filter.getSortBy(), filter.getSortDirection(), filter.getSources(),
-                filter.getProductIds(), filter.getCategories(), filter.getBrand(),
-                filter.getModel(), filter.getBarcode(), filter.getCustomerId(), filter.getUserId());
-
         List<Order> orders = findOrders(filter);
-        log.info("[REPORT-DIAG] Repository returned {} orders", orders.size());
-
-        int scannedItems = 0;
-        int skippedNullProducts = 0;
-        int matchedItems = 0;
 
         ReportTotals totals = new ReportTotals();
         List<ReportRow> rows = new ArrayList<>();
         Map<Long, Order> eligibleOrders = new LinkedHashMap<>();
 
         for (Order order : orders) {
-            int itemCount = order.getItems() == null ? 0 : order.getItems().size();
-            scannedItems += itemCount;
-            log.info("[REPORT-DIAG] Order id={}, number={}, date={}, status={}, items={}",
-                    order.getId(), order.getOrderNumber(), order.getCreatedOn(),
-                    order.getStatus(), itemCount);
-
             Map<Long, BigDecimal> allocatedSales = allocateSalesAmounts(order);
 
             Set<Long> countedProducts = new HashSet<>();
 
             for (OrderItem item : order.getItems()) {
                 Product product = item.getProduct();
-                if (product == null) {
-                    skippedNullProducts++;
-                }
-
                 if (!matchesProductFilters(product, filter)) {
                     continue;
                 }
@@ -110,21 +84,10 @@ public class SalesReportService {
                 );
 
                 rows.add(row);
-                matchedItems++;
-                if (rows.size() <= 3) {
-                    log.info("[REPORT-DIAG] Sample row {}: order={}, itemId={}, productId={}, product={}, sph={}, cyl={}, add={}, prism={}, retailPrice={}, currentQuantity={}, salePriceAtSale={}, quantity={}, user={}",
-                            rows.size(), order.getOrderNumber(), item.getId(), product.getId(),
-                            row.getProductName(), row.getSph(), row.getCyl(), row.getAddPower(),
-                            row.getPrism(), row.getCurrentRetailPrice(), row.getCurrentQuantity(),
-                            row.getSalePriceAtSale(), row.getQuantity(), row.getUsername());
-                }
                 eligibleOrders.put(order.getId(), order);
                 addToTotals(totals, row, canViewPurchaseValues);
             }
         }
-
-        log.info("[REPORT-DIAG] Before sorting: orders={}, scannedItems={}, matchedItems={}, nullProducts={}, rows={}",
-                orders.size(), scannedItems, matchedItems, skippedNullProducts, rows.size());
 
         sortingService.sort(
                 rows,
@@ -137,20 +100,20 @@ public class SalesReportService {
                 filter.getPrimaryGrouping()
         );
 
-        log.info("[REPORT-DIAG] After sorting/grouping: sortedRows={}, groupedRows={}, grouping={}",
-                rows.size(), groupedRows.size(), filter.getPrimaryGrouping());
-
         com.opticsappbg.opticsapp.report.model.ReportGrouping grouping =
                 filter.getPrimaryGrouping();
 
         if (grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT
-                || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.CUSTOMER) {
+                || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.CUSTOMER
+                || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.DAY
+                || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.WEEK
+                || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.MONTH
+                || grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.YEAR) {
             applyPaymentBalances(groupedRows, eligibleOrders, grouping, totals);
         }
 
         section.setRows(groupedRows);
         section.setTotals(totals);
-        log.info("[REPORT-DIAG] Returning section rows={}", section.getRows().size());
 
         return section;
     }
@@ -166,120 +129,80 @@ public class SalesReportService {
         }
 
         List<Long> orderIds = new ArrayList<>(eligibleOrders.keySet());
-
-        Map<Long, BigDecimal> receivedByOrder = new HashMap<>();
-        Map<Long, BigDecimal> refundedByOrder = new HashMap<>();
         Map<Long, BigDecimal> netPaidByOrder = new HashMap<>();
-        Map<Long, List<CustomerPayment>> paymentsByOrder = new HashMap<>();
+        Map<Long, Set<String>> methodsByOrder = new HashMap<>();
 
         for (CustomerPayment payment : customerPaymentRepository
                 .findByOrder_IdInOrderByPaymentDateAsc(orderIds)) {
             Long orderId = payment.getOrder().getId();
-            BigDecimal amount = payment.getAmount() == null
-                    ? ZERO : payment.getAmount();
-
-            if (amount.compareTo(ZERO) > 0) {
-                receivedByOrder.merge(orderId, amount, BigDecimal::add);
-            } else if (amount.compareTo(ZERO) < 0) {
-                refundedByOrder.merge(orderId, amount.abs(), BigDecimal::add);
-            }
-
+            BigDecimal amount = payment.getAmount() == null ? ZERO : payment.getAmount();
             netPaidByOrder.merge(orderId, amount, BigDecimal::add);
-            paymentsByOrder.computeIfAbsent(orderId, ignored -> new ArrayList<>())
-                    .add(payment);
+
+            if (payment.getPaymentMethod() != null) {
+                methodsByOrder.computeIfAbsent(orderId, ignored -> new LinkedHashSet<>())
+                        .add(payment.getPaymentMethod().getDisplayName());
+            }
         }
 
         BigDecimal allDocumentAmount = ZERO;
-        BigDecimal allReceived = ZERO;
-        BigDecimal allRefunded = ZERO;
         BigDecimal allNetPaid = ZERO;
 
         for (Order order : eligibleOrders.values()) {
-            BigDecimal documentAmount = order.getTotal() == null
-                    ? ZERO : order.getTotal();
-            BigDecimal received = receivedByOrder.getOrDefault(order.getId(), ZERO);
-            BigDecimal refunded = refundedByOrder.getOrDefault(order.getId(), ZERO);
-            BigDecimal netPaid = netPaidByOrder.getOrDefault(order.getId(), ZERO);
-
-            allDocumentAmount = allDocumentAmount.add(documentAmount);
-            allReceived = allReceived.add(received);
-            allRefunded = allRefunded.add(refunded);
-            allNetPaid = allNetPaid.add(netPaid);
+            allDocumentAmount = allDocumentAmount.add(
+                    order.getTotal() == null ? ZERO : order.getTotal());
+            allNetPaid = allNetPaid.add(netPaidByOrder.getOrDefault(order.getId(), ZERO));
         }
 
         sectionTotals.setDocumentAmount(round(allDocumentAmount));
-        sectionTotals.setReceivedAmount(round(allReceived));
-        sectionTotals.setRefundedAmount(round(allRefunded));
         sectionTotals.setNetAmount(round(allNetPaid));
         sectionTotals.setOutstandingAmount(round(allDocumentAmount.subtract(allNetPaid)));
         sectionTotals.setPaymentStatus(resolvePaymentStatus(allDocumentAmount, allNetPaid));
 
         for (ReportRow group : groupedRows) {
-            BigDecimal documentAmount = ZERO;
-            BigDecimal received = ZERO;
-            BigDecimal refunded = ZERO;
-            BigDecimal netPaid = ZERO;
-
+            Set<Long> groupOrderIds = new LinkedHashSet<>();
             if (grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT) {
-                Long orderId = group.getDocumentId();
+                if (group.getDocumentId() != null) {
+                    groupOrderIds.add(group.getDocumentId());
+                }
+            } else {
+                for (ReportRow child : group.getChildren()) {
+                    if (child.getDocumentId() != null) {
+                        groupOrderIds.add(child.getDocumentId());
+                    }
+                }
+            }
+
+            BigDecimal documentAmount = ZERO;
+            BigDecimal netPaid = ZERO;
+            Set<String> groupMethods = new LinkedHashSet<>();
+
+            for (Long orderId : groupOrderIds) {
                 Order order = eligibleOrders.get(orderId);
                 if (order == null) {
                     continue;
                 }
 
-                documentAmount = order.getTotal() == null ? ZERO : order.getTotal();
-                received = receivedByOrder.getOrDefault(orderId, ZERO);
-                refunded = refundedByOrder.getOrDefault(orderId, ZERO);
-                netPaid = netPaidByOrder.getOrDefault(orderId, ZERO);
-
-                List<CustomerPayment> payments = paymentsByOrder.get(orderId);
-                if (payments != null && !payments.isEmpty()) {
-                    List<String> paymentLines = new ArrayList<>();
-                    Set<String> methods = new LinkedHashSet<>();
-
-                    for (CustomerPayment payment : payments) {
-                        String date = payment.getPaymentDate() != null
-                                ? payment.getPaymentDate().format(PAYMENT_DATE_FORMAT)
-                                : "Без дата";
-                        String amount = payment.getAmount() != null
-                                ? payment.getAmount().setScale(SCALE, RoundingMode.HALF_UP).toPlainString()
-                                : "0.00";
-
-                        paymentLines.add(date + "  " + amount);
-                        if (payment.getPaymentMethod() != null) {
-                            methods.add(payment.getPaymentMethod().getDisplayName());
-                        }
-                    }
-
-                    group.setPaymentsSummary(String.join("\n", paymentLines));
-                    group.setPaymentMethodsSummary(
-                            methods.isEmpty() ? null : String.join(", ", methods)
-                    );
-                }
-            } else {
-                Long customerId = group.getCustomerId();
-
-                for (Order order : eligibleOrders.values()) {
-                    if (order.getCustomer() == null
-                            || !Objects.equals(order.getCustomer().getId(), customerId)) {
-                        continue;
-                    }
-
-                    Long orderId = order.getId();
-                    documentAmount = documentAmount.add(
-                            order.getTotal() == null ? ZERO : order.getTotal());
-                    received = received.add(receivedByOrder.getOrDefault(orderId, ZERO));
-                    refunded = refunded.add(refundedByOrder.getOrDefault(orderId, ZERO));
-                    netPaid = netPaid.add(netPaidByOrder.getOrDefault(orderId, ZERO));
-                }
+                documentAmount = documentAmount.add(
+                        order.getTotal() == null ? ZERO : order.getTotal());
+                netPaid = netPaid.add(netPaidByOrder.getOrDefault(orderId, ZERO));
+                groupMethods.addAll(methodsByOrder.getOrDefault(orderId, Set.of()));
             }
 
             group.setDocumentAmount(round(documentAmount));
-            group.setReceivedAmount(round(received));
-            group.setRefundedAmount(round(refunded));
             group.setNetAmount(round(netPaid));
             group.setOutstandingAmount(round(documentAmount.subtract(netPaid)));
             group.setPaymentStatus(resolvePaymentStatus(documentAmount, netPaid));
+
+            if (grouping == com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT) {
+                group.setPaymentMethodsSummary(
+                        groupMethods.size() == 1 ? groupMethods.iterator().next() : null);
+            }
+
+            if (group.getTotals() != null
+                    && grouping != com.opticsappbg.opticsapp.report.model.ReportGrouping.DOCUMENT
+                    && grouping != com.opticsappbg.opticsapp.report.model.ReportGrouping.CUSTOMER) {
+                group.getTotals().setPurchaseCount((long) groupOrderIds.size());
+            }
         }
     }
 
